@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "allowUnusedLabels": false,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noImplicitReturns": true,
+    "noUnusedParameters": true,
+    "outDir": "dist",
+    "removeComments": false,
+    "strict": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "target": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "pretty": true,
+    "typeRoots": ["node_modules/@types"]
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"],
+  "compileOnSave": false,
+  "buildOnSave": false,
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
+}

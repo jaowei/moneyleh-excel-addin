@@ -1,0 +1,62 @@
+{
+  "name": "moneyleh-excel-addin",
+  "version": "0.0.1",
+  "license": "MIT",
+  "config": {
+    "app_to_debug": "excel",
+    "app_type_to_debug": "desktop",
+    "dev_server_port": 3000
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=16 <23",
+    "npm": ">=7 <11"
+  },
+  "scripts": {
+    "build": "tsc && vite build",
+    "dev": "vite --port 3000",
+    "preview": "vite preview --port 3000",
+    "lint": "office-addin-lint check",
+    "lint:fix": "office-addin-lint fix",
+    "prettier": "office-addin-lint prettier",
+    "start": "office-addin-debugging start src/manifest.xml",
+    "start:desktop": "office-addin-debugging start manifest.xml desktop",
+    "start:web": "office-addin-debugging start manifest.xml web",
+    "stop": "office-addin-debugging stop manifest.xml",
+    "validate": "office-addin-manifest validate manifest.xml"
+  },
+  "dependencies": {
+    "@fluentui/react-components": "^9.46.8",
+    "@fluentui/react-icons": "^2.0.232",
+    "@tanstack/react-form": "^0.36.2",
+    "@tanstack/zod-form-adapter": "^0.36.2",
+    "dayjs": "^1.11.13",
+    "papaparse": "^5.4.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/office-js": "^1.0.377",
+    "@types/office-runtime": "^1.0.35",
+    "@types/papaparse": "^5.3.15",
+    "@types/react": "^18.2.64",
+    "@types/react-dom": "^18.2.21",
+    "@vitejs/plugin-react-swc": "^3.7.1",
+    "eslint-plugin-office-addins": "^3.0.2",
+    "eslint-plugin-react": "^7.28.0",
+    "office-addin-cli": "^1.6.5",
+    "office-addin-debugging": "^5.1.6",
+    "office-addin-dev-certs": "^1.13.5",
+    "office-addin-lint": "^2.3.5",
+    "office-addin-manifest": "^1.13.6",
+    "office-addin-mock": "^2.4.6",
+    "office-addin-prettier-config": "^1.2.1",
+    "office-addin-test-helpers": "^1.5.5",
+    "office-addin-test-server": "^1.5.5",
+    "typescript": "^5.4.2",
+    "vite": "^5.4.11",
+    "vite-plugin-office-addin": "^2.1.0"
+  },
+  "prettier": "office-addin-prettier-config"
+}
