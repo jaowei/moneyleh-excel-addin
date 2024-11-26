@@ -1,8 +1,6 @@
 import * as React from "react";
 import { Field, Input, makeStyles } from "@fluentui/react-components";
-import { Ribbon24Regular, LockOpen24Regular, DesignIdeas24Regular } from "@fluentui/react-icons";
 import { routeToParsers } from "../../lib/parsers/parser";
-import { HeroListItem } from "./HeroList";
 import { insertRange } from "../../lib/excel";
 import { useState } from "react";
 
@@ -18,7 +16,7 @@ const useStyles = makeStyles({
 
 const InputFormField = () => {};
 
-const App: React.FC<AppProps> = (props: AppProps) => {
+const App: React.FC<AppProps> = () => {
   const [accountName, setAccountName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const styles = useStyles();
