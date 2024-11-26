@@ -37,7 +37,6 @@ const App: React.FC<AppProps> = (props: AppProps) => {
     const tempData = rowData.map((row: any) => {
       return [...Object.values(row), `=TEXT([@Date], "yyyy-mm")`];
     });
-    console.log(tempData);
     insertRange(tempData);
   };
 
@@ -46,10 +45,10 @@ const App: React.FC<AppProps> = (props: AppProps) => {
   return (
     <div className={styles.root}>
       <Field label="Company Name" required hint="Company name to be filled">
-        <Input onChange={handleCompanyNameChange}></Input>
+        <Input value={companyName} onChange={handleCompanyNameChange}></Input>
       </Field>
       <Field label="Account Name" required hint="Account name to be filled">
-        <Input onChange={handleAccountNameChange}></Input>
+        <Input value={accountName} onChange={handleAccountNameChange}></Input>
       </Field>
       <Field label="Select file" required hint="Fill up company name and account name first">
         <input type="file" onChange={handleFileInputChange} disabled={noParsingAllowed}></input>

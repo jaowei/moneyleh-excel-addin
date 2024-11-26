@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import updateLocale from "dayjs/plugin/updateLocale";
 
-export const DATE_FORMAT = "DD/MM/YYYY";
+export const DATE_FORMAT = "DD/MMM/YYYY";
 
 dayjs.extend(customParseFormat);
 dayjs.extend(updateLocale);

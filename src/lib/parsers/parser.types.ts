@@ -1,3 +1,5 @@
+import { TextItem, TextMarkedContent } from "pdfjs-dist/types/src/display/api";
+
 export type Transaction = {
   date: string;
   transactionTag: string;
@@ -15,3 +17,15 @@ export type CSVFormatParser = (
   accountName: string,
   companyName: string
 ) => Transaction[];
+
+export const isTextItem = (item: TextItem | TextMarkedContent): item is TextItem => {
+  return (item as TextItem).width !== undefined;
+};
+
+export type PDFFormatParser = (
+  parsedContent: Array<TextItem | TextMarkedContent>,
+  accountName: string,
+  companyName: string
+) => Transaction[];
+
+export type XLSFormatParser = (parsedContent: Array<any>, accountName: string, companyName: string) => Transaction[];

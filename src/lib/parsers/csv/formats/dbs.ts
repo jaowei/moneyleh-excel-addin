@@ -10,7 +10,7 @@ const keywordsParentTagMap = new Map([
 
 export const isDBSAccountFormat = (parseResult: Papa.ParseResult<any>) => {
   const accountDetails = parseResult.data[0][1];
-  return accountDetails.includes("DBS");
+  return accountDetails.match(/^DBS.*\d$/g);
 };
 
 const parseDBSNAVDescription = (description: string) => {
@@ -34,14 +34,15 @@ const parseDBSNAVDescription = (description: string) => {
 
 export const parseDBSAppFormat: CSVFormatParser = (parsedContent, accountName, companyName) => {
   let currency = "SGD";
+  console.log(parsedContent);
   return parsedContent.data.reduce((prev: Array<Transaction>, curr: Array<string>) => {
     if (curr[0] === "Currency:") {
       currency = curr[1].slice(0, 4);
     }
-    if (extendedDayjs(curr[0], "DD MMM YYYY").isValid()) {
+    if (extendedDayjs(curr[0], "D MMM YYYY").isValid()) {
       let amount = 0;
-      const debitAmt = curr.at(-6)?.trim();
-      const creditAmt = curr.at(-5)?.trim();
+      const debitAmt = curr.at(4)?.trim();
+      const creditAmt = curr.at(5)?.trim();
       if (debitAmt) {
         amount = parseFloat(debitAmt) * -1;
       } else if (creditAmt) {
@@ -50,15 +51,15 @@ export const parseDBSAppFormat: CSVFormatParser = (parsedContent, accountName, c
       const description = curr.slice(-4, -1).join(" ");
       const { transactionMethod, transactionType } = descriptionToTags(description);
       prev.push({
-        date: formatTransactionDate(curr[0], "DD-MMM-YYYY") ?? "",
+        date: formatTransactionDate(curr[0], "D-MMM-YYYY") ?? "",
         transactionTag: "",
         company: companyName,
         account: accountName,
         currency,
         amount,
         description,
-        transactionType: transactionType,
-        transactionMethod: transactionMethod,
+        transactionMethod,
+        transactionType,
       });
     }
     return prev;

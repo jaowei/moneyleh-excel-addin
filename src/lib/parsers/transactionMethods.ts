@@ -8,14 +8,17 @@ export const TransactionMethods = {
   transfer: {
     name: "Transfer",
   },
-  cardPhysical: {
-    name: "Physical",
+  cardSlot: {
+    name: "Physical Slot In",
+  },
+  cardContactless: {
+    name: "Physical Contactless",
   },
   cardOnline: {
     name: "Online",
   },
-  cardDevice: {
-    name: "Device",
+  mobileContactless: {
+    name: "Mobile Contactless",
   },
   nets: {
     name: "Nets",

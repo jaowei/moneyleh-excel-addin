@@ -12,7 +12,6 @@ const root = rootElement ? createRoot(rootElement) : undefined;
 
 /* Render application after Office initializes */
 Office.onReady(() => {
-  console.log("root", root);
   root?.render(
     <FluentProvider theme={webLightTheme}>
       <App title={title} />
