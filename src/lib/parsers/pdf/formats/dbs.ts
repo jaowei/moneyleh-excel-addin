@@ -1,10 +1,9 @@
 import { descriptionToTags } from "../../description";
-import { TextItem, TextMarkedContent } from "pdfjs-dist/types/src/display/api";
-import { isTextItem, PDFFormatParser, Transaction } from "../../parser.types";
+import { isTextItem, PDFFormatChecker, PDFFormatParser, Transaction } from "../../parser.types";
 import { isInSameRow } from "../pdfParser";
 import { extendedDayjs, formatTransactionDate } from "../../../utils/dayjs";
 
-export const isDBSCardFormat = (data?: Array<TextItem | TextMarkedContent>) => {
+export const isDBSCardFormat: PDFFormatChecker = (data) => {
   const cardName = data?.at(35);
   if (cardName && isTextItem(cardName)) {
     return cardName.str.includes("DBS");

@@ -1,11 +1,11 @@
-import { TextItem, TextMarkedContent } from "pdfjs-dist/types/src/display/api";
+import { TextItem } from "pdfjs-dist/types/src/display/api";
 import { extendedDayjs } from "../../../utils/dayjs";
-import { isTextItem, PDFFormatParser, Transaction } from "../../parser.types";
+import { isTextItem, PDFFormatChecker, PDFFormatParser, Transaction } from "../../parser.types";
 import { TransactionMethods } from "../../transactionMethods";
 import { TransactionTypes } from "../../transactionTypes";
 import { isInSameRow } from "../pdfParser";
 
-export const isMooMooFormat = (data?: Array<TextItem | TextMarkedContent>) => {
+export const isMooMooFormat: PDFFormatChecker = (data) => {
   const companyName = data?.at(-24);
   if (companyName && isTextItem(companyName)) {
     return companyName.str.includes("Moomoo");

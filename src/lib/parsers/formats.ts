@@ -8,4 +8,5 @@ export enum StatementFormats {
   IBKR_ACCOUNT = "ibkr-account",
   DBS_NAV_ACCOUNT = "dbs-NAV-account",
   SYFE_ACCOUNT = "syfe-account",
+  CHOCOLATE_ACCOUNT = "chocolate-account",
 }

@@ -22,6 +22,8 @@ export const isTextItem = (item: TextItem | TextMarkedContent): item is TextItem
   return (item as TextItem).width !== undefined;
 };
 
+export type PDFFormatChecker = (data?: Array<TextItem | TextMarkedContent>) => boolean;
+
 export type PDFFormatParser = (
   parsedContent: Array<TextItem | TextMarkedContent>,
   accountName: string,

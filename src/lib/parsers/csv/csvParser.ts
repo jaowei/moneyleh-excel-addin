@@ -21,7 +21,6 @@ export const CSVFileParser = {
   },
   async safeParseContent(data: Papa.ParseResult<any>, accountName: string, companyName: string) {
     try {
-      console.log(data);
       const parser = await this.determineParser(data);
       return parser(data, accountName, companyName);
     } catch (error) {

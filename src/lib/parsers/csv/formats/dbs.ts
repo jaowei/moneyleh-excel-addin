@@ -34,7 +34,6 @@ const parseDBSNAVDescription = (description: string) => {
 
 export const parseDBSAppFormat: CSVFormatParser = (parsedContent, accountName, companyName) => {
   let currency = "SGD";
-  console.log(parsedContent);
   return parsedContent.data.reduce((prev: Array<Transaction>, curr: Array<string>) => {
     if (curr[0] === "Currency:") {
       currency = curr[1].slice(0, 4);
