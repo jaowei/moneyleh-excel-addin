@@ -8,6 +8,7 @@ import { isMooMooFormat, parseMoomooFormat } from "./formats/moomoo";
 import { isTextItem, PDFFormatParser, Transaction } from "../parser.types";
 import { TextItem, TextMarkedContent } from "pdfjs-dist/types/src/display/api";
 import { isChocolateFormat, parseChocolateFormat } from "./formats/chocolate";
+import { isCPFFormat, parseCPFFormat } from "./formats/cpf";
 
 export const PDFFileParser = {
   async decodeFile(file: File, password?: string) {
@@ -41,6 +42,9 @@ export const PDFFileParser = {
     if (isChocolateFormat(data)) {
       return this.appParsers[StatementFormats.CHOCOLATE_ACCOUNT];
     }
+    if (isCPFFormat(data)) {
+      return this.appParsers[StatementFormats.CPF];
+    }
     return;
   },
   async safeParseContent(data: Array<TextItem | TextMarkedContent>, accountName: string, companyName: string) {
@@ -55,6 +59,7 @@ export const PDFFileParser = {
     [StatementFormats.DBS_CARD]: parseDBSFormat,
     [StatementFormats.MOOMOO_ACCOUNT]: parseMoomooFormat,
     [StatementFormats.CHOCOLATE_ACCOUNT]: parseChocolateFormat,
+    [StatementFormats.CPF]: parseCPFFormat,
   } as Record<string, PDFFormatParser>,
 };
 
@@ -70,7 +75,8 @@ export const genericPDFDataExtractor = (
   yearExtractor: (text: string) => string,
   startRule: (text: string) => boolean,
   stopRule: (text: string) => boolean,
-  formatRow: (row: string[], year: string, accountName: string, companyName: string) => Transaction
+  formatRow: (row: string[], year: string, accountName: string, companyName: string) => Transaction | Transaction[],
+  shouldFormatRow: (row: string[]) => boolean
 ) => {
   if (!data) return [];
   let statementYear: string = "";
@@ -106,9 +112,13 @@ export const genericPDFDataExtractor = (
     if (isInSameRow(prevCoord, currCoord)) {
       row.push(text);
     } else {
-      if (row.length >= 3) {
+      if (shouldFormatRow(row)) {
         const parsedData = formatRow(row, statementYear, accountName, companyName);
-        result.push(parsedData);
+        if (Array.isArray(parsedData)) {
+          result.push(...parsedData);
+        } else {
+          result.push(parsedData);
+        }
       }
       row = [text];
     }

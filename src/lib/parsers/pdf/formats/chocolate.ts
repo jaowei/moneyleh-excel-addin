@@ -55,6 +55,10 @@ const formatChoclateRow = (row: string[], year: string, accountName: string, com
   };
 };
 
+const shouldFormatRow = (row: string[]) => {
+  return row.length >= 3;
+};
+
 export const parseChocolateFormat: PDFFormatParser = (data, accountName, companyName) => {
   return genericPDFDataExtractor(
     data,
@@ -64,6 +68,7 @@ export const parseChocolateFormat: PDFFormatParser = (data, accountName, company
     extractChocolateYear,
     startChocolateExtraction,
     stopChocolateExtraction,
-    formatChoclateRow
+    formatChoclateRow,
+    shouldFormatRow
   );
 };

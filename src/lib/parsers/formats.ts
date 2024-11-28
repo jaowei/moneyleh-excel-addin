@@ -9,4 +9,5 @@ export enum StatementFormats {
   DBS_NAV_ACCOUNT = "dbs-NAV-account",
   SYFE_ACCOUNT = "syfe-account",
   CHOCOLATE_ACCOUNT = "chocolate-account",
+  CPF = "CPF",
 }

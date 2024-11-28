@@ -14,8 +14,6 @@ const useStyles = makeStyles({
   },
 });
 
-const InputFormField = () => {};
-
 const App: React.FC<AppProps> = () => {
   const [accountName, setAccountName] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -38,8 +36,6 @@ const App: React.FC<AppProps> = () => {
     insertRange(tempData);
   };
 
-  const noParsingAllowed = !(accountName && companyName);
-
   return (
     <div className={styles.root}>
       <Field label="Company Name" required hint="Company name to be filled">
@@ -49,7 +45,7 @@ const App: React.FC<AppProps> = () => {
         <Input value={accountName} onChange={handleAccountNameChange}></Input>
       </Field>
       <Field label="Select file" required hint="Fill up company name and account name first">
-        <input type="file" onChange={handleFileInputChange} disabled={noParsingAllowed}></input>
+        <input type="file" onChange={handleFileInputChange}></input>
       </Field>
     </div>
   );
