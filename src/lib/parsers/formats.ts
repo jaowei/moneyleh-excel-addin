@@ -11,4 +11,5 @@ export enum StatementFormats {
   CHOCOLATE_ACCOUNT = "chocolate-account",
   CPF = "CPF",
   UOB_ACCOUNT = "uob-account",
+  TRUST_CARD = "trust-creditcard",
 }

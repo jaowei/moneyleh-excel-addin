@@ -9,6 +9,7 @@ import { isTextItem, PDFFormatParser, Transaction } from "../parser.types";
 import { TextItem, TextMarkedContent } from "pdfjs-dist/types/src/display/api";
 import { isChocolateFormat, parseChocolateFormat } from "./formats/chocolate";
 import { isCPFFormat, parseCPFFormat } from "./formats/cpf";
+import { isTrustCardFormat, parseTrustCardFormat } from "./formats/trust";
 
 export const PDFFileParser = {
   async decodeFile(file: File, password?: string) {
@@ -47,6 +48,9 @@ export const PDFFileParser = {
     if (isCPFFormat(data)) {
       return [this.appParsers[StatementFormats.CPF], StatementFormats.CPF];
     }
+    if (isTrustCardFormat(data)) {
+      return [this.appParsers[StatementFormats.TRUST_CARD], StatementFormats.TRUST_CARD];
+    }
     return [undefined, undefined];
   },
   async safeParseContent(data: Array<TextItem | TextMarkedContent>, accountName: string, companyName: string) {
@@ -65,6 +69,7 @@ export const PDFFileParser = {
     [StatementFormats.MOOMOO_ACCOUNT]: parseMoomooFormat,
     [StatementFormats.CHOCOLATE_ACCOUNT]: parseChocolateFormat,
     [StatementFormats.CPF]: parseCPFFormat,
+    [StatementFormats.TRUST_CARD]: parseTrustCardFormat,
   } as Record<string, PDFFormatParser>,
 };
 
