@@ -1,4 +1,4 @@
-export async function insertRange(rangeData: string[][]) {
+export async function insertRange(rangeData: (string | number)[][] | undefined) {
   try {
     await Excel.run(async (context) => {
       const sheet = context.workbook.worksheets.getActiveWorksheet();

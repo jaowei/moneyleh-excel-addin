@@ -20,19 +20,22 @@ export const XlsFileParser = {
       header: 1,
     });
   },
-  async determineParser(data: Array<any>) {
+  async determineParser(data: Array<any>): Promise<[XLSFormatParser | undefined, StatementFormats | undefined]> {
     if (isUOBCardFormat(data)) {
-      return this.appParsers[StatementFormats.UOB_CARD];
+      return [this.appParsers[StatementFormats.UOB_CARD], StatementFormats.UOB_CARD];
     }
     if (isUOBAccountFormat(data)) {
-      return this.appParsers[StatementFormats.UOB_ACCOUNT];
+      return [this.appParsers[StatementFormats.UOB_ACCOUNT], StatementFormats.UOB_ACCOUNT];
     }
-    return;
+    return [undefined, undefined];
   },
   async safeParseContent(data: Array<any>, accountName: string, companyName: string) {
     try {
-      const parser = await this.determineParser(data);
-      return parser?.(data, accountName, companyName);
+      const [parser, formatName] = await this.determineParser(data);
+      return {
+        rowData: parser?.(data, accountName, companyName),
+        formatName,
+      };
     } catch (error) {
       return null;
     }

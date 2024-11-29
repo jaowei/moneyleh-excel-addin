@@ -32,25 +32,30 @@ export const PDFFileParser = {
     }
     return result;
   },
-  async determineParser(data: Array<TextItem | TextMarkedContent>) {
+  async determineParser(
+    data: Array<TextItem | TextMarkedContent>
+  ): Promise<[PDFFormatParser | undefined, StatementFormats | undefined]> {
     if (isDBSCardFormat(data)) {
-      return this.appParsers[StatementFormats.DBS_CARD];
+      return [this.appParsers[StatementFormats.DBS_CARD], StatementFormats.DBS_CARD];
     }
     if (isMooMooFormat(data)) {
-      return this.appParsers[StatementFormats.MOOMOO_ACCOUNT];
+      return [this.appParsers[StatementFormats.MOOMOO_ACCOUNT], StatementFormats.MOOMOO_ACCOUNT];
     }
     if (isChocolateFormat(data)) {
-      return this.appParsers[StatementFormats.CHOCOLATE_ACCOUNT];
+      return [this.appParsers[StatementFormats.CHOCOLATE_ACCOUNT], StatementFormats.CHOCOLATE_ACCOUNT];
     }
     if (isCPFFormat(data)) {
-      return this.appParsers[StatementFormats.CPF];
+      return [this.appParsers[StatementFormats.CPF], StatementFormats.CPF];
     }
-    return;
+    return [undefined, undefined];
   },
   async safeParseContent(data: Array<TextItem | TextMarkedContent>, accountName: string, companyName: string) {
     try {
-      const parser = await this.determineParser(data);
-      return parser?.(data, accountName, companyName);
+      const [parser, formatName] = await this.determineParser(data);
+      return {
+        rowData: parser?.(data, accountName, companyName),
+        formatName,
+      };
     } catch (error) {
       return null;
     }

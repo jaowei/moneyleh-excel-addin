@@ -13,22 +13,27 @@ export const CSVFileParser = {
   async extractContent(textContent: string) {
     return Papa.parse(textContent, { skipEmptyLines: true });
   },
-  async determineParser(data: Papa.ParseResult<any>) {
+  async determineParser(
+    data: Papa.ParseResult<any>
+  ): Promise<[CSVFormatParser | undefined, StatementFormats | undefined]> {
     if (isDBSAccountFormat(data)) {
-      return this.appParsers[StatementFormats.DBS_ACCOUNT];
+      return [this.appParsers[StatementFormats.DBS_ACCOUNT], StatementFormats.DBS_ACCOUNT];
     }
     if (isHSBCCard(data)) {
-      return this.appParsers[StatementFormats.HSBC_CARD];
+      return [this.appParsers[StatementFormats.HSBC_CARD], StatementFormats.HSBC_CARD];
     }
     if (isCitiCardFormat(data)) {
-      return this.appParsers[StatementFormats.CITI_CARD];
+      return [this.appParsers[StatementFormats.CITI_CARD], StatementFormats.CITI_CARD];
     }
-    return;
+    return [undefined, undefined];
   },
   async safeParseContent(data: Papa.ParseResult<any>, accountName: string, companyName: string) {
     try {
-      const parser = await this.determineParser(data);
-      return parser?.(data, accountName, companyName);
+      const [parser, formatName] = await this.determineParser(data);
+      return {
+        rowData: parser?.(data, accountName, companyName),
+        formatName,
+      };
     } catch (error) {
       return null;
     }
