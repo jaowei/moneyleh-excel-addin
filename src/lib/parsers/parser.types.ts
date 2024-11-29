@@ -30,4 +30,6 @@ export type PDFFormatParser = (
   companyName: string
 ) => Transaction[];
 
+export type XLSFormatChecker = (data: Array<any>) => boolean;
+
 export type XLSFormatParser = (parsedContent: Array<any>, accountName: string, companyName: string) => Transaction[];

@@ -10,4 +10,5 @@ export enum StatementFormats {
   SYFE_ACCOUNT = "syfe-account",
   CHOCOLATE_ACCOUNT = "chocolate-account",
   CPF = "CPF",
+  UOB_ACCOUNT = "uob-account",
 }

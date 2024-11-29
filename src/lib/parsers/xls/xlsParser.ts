@@ -1,6 +1,7 @@
 import { read, utils, WorkBook } from "xlsx";
-import { isUOBCardFormat, parseUOBFormat } from "./formats/uob";
+import { isUOBAccountFormat, isUOBCardFormat, parseUOBAccountFormat, parseUOBCardFormat } from "./formats/uob";
 import { StatementFormats } from "../formats";
+import { XLSFormatParser } from "../parser.types";
 
 export const XlsFileParser = {
   async readFile(file: File) {
@@ -23,11 +24,15 @@ export const XlsFileParser = {
     if (isUOBCardFormat(data)) {
       return this.appParsers[StatementFormats.UOB_CARD];
     }
+    if (isUOBAccountFormat(data)) {
+      return this.appParsers[StatementFormats.UOB_ACCOUNT];
+    }
+    return;
   },
   async safeParseContent(data: Array<any>, accountName: string, companyName: string) {
     try {
       const parser = await this.determineParser(data);
-      return parser(data, accountName, companyName);
+      return parser?.(data, accountName, companyName);
     } catch (error) {
       return null;
     }
@@ -37,6 +42,7 @@ export const XlsFileParser = {
     return workbook.SheetNames;
   },
   appParsers: {
-    [StatementFormats.UOB_CARD]: parseUOBFormat,
-  } as Record<string, any>,
+    [StatementFormats.UOB_CARD]: parseUOBCardFormat,
+    [StatementFormats.UOB_ACCOUNT]: parseUOBAccountFormat,
+  } as Record<string, XLSFormatParser>,
 };
