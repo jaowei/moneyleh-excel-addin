@@ -8,11 +8,16 @@ export enum AcceptedMIMETypesEnum {
   XLS = "application/vnd.ms-excel",
 }
 
-export const routeToParsers = async (file: File | undefined, accountName: string, companyName: string) => {
+export const routeToParsers = async (
+  file: File | undefined,
+  accountName: string,
+  companyName: string,
+  password?: string
+) => {
   let rowData;
   switch (file?.type) {
     case AcceptedMIMETypesEnum.PDF:
-      const fileDataPDF = await PDFFileParser.decodeFile(file, "");
+      const fileDataPDF = await PDFFileParser.decodeFile(file, password);
       rowData = await PDFFileParser.safeParseContent(fileDataPDF, accountName, companyName);
       break;
     case AcceptedMIMETypesEnum.CSV:

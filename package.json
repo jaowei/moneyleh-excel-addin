@@ -23,7 +23,7 @@
     "start": "office-addin-debugging start src/manifest.xml",
     "start:desktop": "office-addin-debugging start manifest.xml desktop",
     "start:web": "office-addin-debugging start manifest.xml web",
-    "stop": "office-addin-debugging stop manifest.xml",
+    "stop": "office-addin-debugging stop src/manifest.xml",
     "validate": "office-addin-manifest validate manifest.xml"
   },
   "dependencies": {
