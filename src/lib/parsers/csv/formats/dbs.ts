@@ -1,6 +1,6 @@
 import { extendedDayjs, formatTransactionDate } from "../../../utils/dayjs";
 import { descriptionToTags } from "../../description";
-import { CSVFormatParser, Transaction } from "../../parser.types";
+import { CSVFormatChecker, CSVFormatParser, Transaction } from "../../parser.types";
 
 const keywordsParentTagMap = new Map([
   ["PAYLAH", "Paylah"],
@@ -8,9 +8,13 @@ const keywordsParentTagMap = new Map([
   ["PayNow", "Paynow"],
 ]);
 
-export const isDBSAccountFormat = (parseResult: Papa.ParseResult<any>) => {
+export const isDBSAccountFormat: CSVFormatChecker = (parseResult) => {
   const accountDetails = parseResult.data[0][1];
-  return accountDetails.match(/^DBS.*\d$/g);
+  const res = accountDetails.match(/^DBS.*\d$/g);
+  if (!res) {
+    return false;
+  }
+  return true;
 };
 
 const parseDBSNAVDescription = (description: string) => {

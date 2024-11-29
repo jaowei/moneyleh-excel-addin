@@ -12,15 +12,17 @@ export type Transaction = {
   transactionType?: string;
 };
 
+export const isTextItem = (item: TextItem | TextMarkedContent): item is TextItem => {
+  return (item as TextItem).width !== undefined;
+};
+
+export type CSVFormatChecker = (data: Papa.ParseResult<string>) => boolean;
+
 export type CSVFormatParser = (
   parsedContent: Papa.ParseResult<any>,
   accountName: string,
   companyName: string
 ) => Transaction[];
-
-export const isTextItem = (item: TextItem | TextMarkedContent): item is TextItem => {
-  return (item as TextItem).width !== undefined;
-};
 
 export type PDFFormatChecker = (data?: Array<TextItem | TextMarkedContent>) => boolean;
 

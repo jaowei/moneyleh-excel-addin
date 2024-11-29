@@ -1,13 +1,17 @@
 import { formatTransactionDate } from "../../../utils/dayjs";
 import { descriptionToTags } from "../../description";
-import { CSVFormatChecker, CSVFormatParser, Transaction } from "../../parser.types";
+import { CSVFormatChecker, CSVFormatParser } from "../../parser.types";
 
-export const isHSBCCard: CSVFormatChecker = (parseResult) => {
-  return parseResult.data[0][1].includes("•");
+export const isCitiCardFormat: CSVFormatChecker = (data) => {
+  const res = data.data[0][4].match(/('\d*')/g);
+  if (!res) {
+    return false;
+  }
+  return true;
 };
 
-export const parseHSBCFormat: CSVFormatParser = (parsedContent, accountName, companyName): Array<Transaction> => {
-  return parsedContent.data.map((data: string[]) => {
+export const parseCitiCardFormat: CSVFormatParser = (data, accountName, companyName) => {
+  return data.data.map((data: string[]) => {
     const description = data[1];
     const { transactionMethod, transactionType } = descriptionToTags(description);
     return {
@@ -15,7 +19,7 @@ export const parseHSBCFormat: CSVFormatParser = (parsedContent, accountName, com
       transactionTag: "",
       company: companyName,
       account: accountName,
-      currency: description.slice(-3),
+      currency: "SGD",
       amount: parseFloat(data[2]),
       description,
       transactionMethod: transactionMethod,
