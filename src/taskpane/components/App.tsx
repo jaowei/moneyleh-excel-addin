@@ -65,10 +65,10 @@ const App: React.FC<AppProps> = () => {
 
   return (
     <div className={styles.root}>
-      <Field label="Company Name" required hint="Company name to be filled">
+      <Field label="Company Name" hint="Company name to be filled">
         <Input value={companyName} onChange={handleCompanyNameChange}></Input>
       </Field>
-      <Field label="Account Name" required hint="Account name to be filled">
+      <Field label="Account Name" hint="Account name to be filled">
         <Input value={accountName} onChange={handleAccountNameChange}></Input>
       </Field>
       <Field label="Password" hint="If the file has any password">

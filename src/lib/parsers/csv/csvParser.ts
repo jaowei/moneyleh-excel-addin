@@ -4,6 +4,7 @@ import { isDBSAccountFormat, parseDBSAppFormat, parseDBSNAVAppFormat } from "./f
 import { isHSBCCard, parseHSBCFormat } from "./formats/hsbc";
 import { isCitiCardFormat, parseCitiCardFormat } from "./formats/citi";
 import { CSVFormatParser } from "../parser.types";
+import { isIBKRFormat, parseIBKRFormat } from "./formats/ibkr";
 
 export const CSVFileParser = {
   async decodeFile(file: File) {
@@ -25,6 +26,9 @@ export const CSVFileParser = {
     if (isCitiCardFormat(data)) {
       return [this.appParsers[StatementFormats.CITI_CARD], StatementFormats.CITI_CARD];
     }
+    if (isIBKRFormat(data)) {
+      return [this.appParsers[StatementFormats.IBKR_ACCOUNT], StatementFormats.IBKR_ACCOUNT];
+    }
     return [undefined, undefined];
   },
   async safeParseContent(data: Papa.ParseResult<any>, accountName: string, companyName: string) {
@@ -43,5 +47,6 @@ export const CSVFileParser = {
     [StatementFormats.DBS_NAV_ACCOUNT]: parseDBSNAVAppFormat,
     [StatementFormats.HSBC_CARD]: parseHSBCFormat,
     [StatementFormats.CITI_CARD]: parseCitiCardFormat,
+    [StatementFormats.IBKR_ACCOUNT]: parseIBKRFormat,
   } as Record<string, CSVFormatParser>,
 };
