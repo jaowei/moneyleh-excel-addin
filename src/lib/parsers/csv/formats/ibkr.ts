@@ -13,15 +13,15 @@ const reportSelector = (code: string) => {
     case "STFU":
       return {
         isReport: true,
-        format(row: string[], accountName: string, companyName: string): Transaction | undefined {
+        format(row: string[], _: string, companyName: string): Transaction | undefined {
           if (!row[0].includes("U***")) return;
           return {
             date: formatTransactionDate(row[29], "YYYYMMDD") ?? "",
             transactionTag: "",
             company: companyName,
-            account: accountName,
+            account: "Cash Account",
             currency: row[3],
-            amount: parseFloat(row[43]),
+            amount: parseFloat(row[43]) - parseFloat(row[39]) - parseFloat(row[40]),
             description: row[31],
             transactionMethod: TransactionMethods.transfer.name,
             transactionType: TransactionTypes.investments,
@@ -31,13 +31,13 @@ const reportSelector = (code: string) => {
     case "STAX":
       return {
         isReport: true,
-        format(row: string[], accountName: string, companyName: string): Transaction | undefined {
+        format(row: string[], _: string, companyName: string): Transaction | undefined {
           if (!row[0].includes("U***")) return;
           return {
             date: formatTransactionDate(row[24], "YYYYMMDD") ?? "",
             transactionTag: "Investment GST",
             company: companyName,
-            account: accountName,
+            account: "Cash Account",
             currency: row[3],
             amount: parseFloat(row[31]),
             description: row[28],
@@ -49,14 +49,14 @@ const reportSelector = (code: string) => {
     case "UNBC":
       return {
         isReport: true,
-        format(row: string[], accountName: string, companyName: string): Transaction | undefined {
+        format(row: string[], _: string, companyName: string): Transaction | undefined {
           if (!row[0].includes("U***")) return;
           const dateTime = row[24].split(";");
           return {
             date: formatTransactionDate(dateTime[0], "YYYYMMDD;") ?? "",
-            transactionTag: "Investment Commission",
+            transactionTag: row[25] === "IDEALFX" ? "FX Commission" : "Investment Commission",
             company: companyName,
-            account: accountName,
+            account: "Cash Account",
             currency: row[3],
             amount: parseFloat(row[31]),
             description: row[7] + " " + row[25],
@@ -65,7 +65,7 @@ const reportSelector = (code: string) => {
           };
         },
       };
-    case "CNAV":
+    case "EQUT":
       return {
         isReport: true,
         format(row: string[], _: string, companyName: string): Transaction | undefined {
@@ -76,11 +76,23 @@ const reportSelector = (code: string) => {
             company: companyName,
             account: "Securities",
             currency: "SGD",
-            amount: parseFloat(row[6]),
+            amount: parseFloat(row[20]),
             description: "Mark to market",
             transactionMethod: TransactionMethods.transfer.name,
             transactionType: TransactionTypes.investments,
           };
+        },
+        onEnd(result: Array<Transaction>) {
+          const first = result[0];
+          const last = result.at(-1);
+          if (last) {
+            const aggregatedNav = {
+              ...last,
+              amount: (last?.amount ?? 0) - first.amount,
+            };
+            return [aggregatedNav];
+          }
+          return result;
         },
       };
     default:
@@ -93,10 +105,10 @@ const reportSelector = (code: string) => {
 export const parseIBKRFormat: CSVFormatParser = (data, accountName, companyName) => {
   let start = false;
   let formatter;
-  const result: Array<Transaction> = [];
+  let result: Array<Transaction> = [];
 
   for (const row of data.data) {
-    const { isReport, format } = reportSelector(row[1]);
+    const { isReport, format, onEnd } = reportSelector(row[1]);
     if (row[0] === "BOS" && isReport) {
       start = true;
       formatter = format;
@@ -105,6 +117,7 @@ export const parseIBKRFormat: CSVFormatParser = (data, accountName, companyName)
 
     if (row[0] === "EOS") {
       start = false;
+      result = onEnd?.(result) ?? result;
       continue;
     }
 
