@@ -9,9 +9,11 @@ const keywordsParentTagMap = new Map([
 ]);
 
 export const isDBSAccountFormat: CSVFormatChecker = (parseResult) => {
+  const statementHeader = parseResult.data[0][0];
   const accountDetails = parseResult.data[0][1];
-  const res = accountDetails.match(/^DBS.*\d$/g);
-  if (!res) {
+  const detailsMatch = accountDetails.match(/^DBS.*\d$/g);
+  const headerMatch = statementHeader === "Account Details For:";
+  if (!detailsMatch && !headerMatch) {
     return false;
   }
   return true;

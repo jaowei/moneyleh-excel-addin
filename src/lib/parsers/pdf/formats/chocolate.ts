@@ -45,8 +45,8 @@ const formatChoclateRow = (row: string[], year: string, accountName: string, com
   return {
     date: formatTransactionDate(row[0], "DD MM") + year,
     transactionTag: "",
-    account: accountName,
     company: companyName,
+    account: accountName,
     currency: "SGD",
     amount,
     description: row[2],
