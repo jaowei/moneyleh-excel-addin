@@ -1,5 +1,5 @@
 import { TextItem } from "pdfjs-dist/types/src/display/api";
-import { extendedDayjs } from "../../../utils/dayjs";
+import { extendedDayjs, formatTransactionDate } from "../../../utils/dayjs";
 import { isTextItem, PDFFormatChecker, PDFFormatParser, Transaction } from "../../parser.types";
 import { TransactionMethods } from "../../transactionMethods";
 import { TransactionTypes } from "../../transactionTypes";
@@ -22,8 +22,19 @@ const filterTextData = (text: string): boolean => {
 
 const extractMonth = (targetString: string) => {
   return extendedDayjs(targetString, "MMM YYYY").isValid()
-    ? extendedDayjs(targetString, "MMM YYYY").endOf("month").format("DD/MM/YYYY")
+    ? extendedDayjs(targetString, "MMM YYYY").endOf("month").format("DD/MMM/YYYY")
     : null;
+};
+
+const extractCurrency = (str: string) => {
+  switch (str) {
+    case "SGD":
+      return "SGD";
+    case "USD":
+      return "USD";
+    default:
+      return;
+  }
 };
 
 const isValidRowCash = (row: Array<string>) => {
@@ -47,17 +58,23 @@ const convertSign = (targetString: string) => {
   return amount;
 };
 
-const parseRowCash = (row: Array<string>, accountName: string, companyName: string): Transaction => {
+const parseRowCash = (
+  row: Array<string>,
+  accountName: string,
+  companyName: string,
+  currency?: string
+): Transaction | undefined => {
   const formattedAmt = row[2].replace(",", "");
   const amount = convertSign(formattedAmt);
+  if (amount === 0) return;
   return {
-    date: extendedDayjs(row[0]).format("DD/MM/YYYY"),
+    date: formatTransactionDate(row[0], "YYYY/MM/DD  HH:mm:ss") ?? "",
     transactionTag: "",
     company: companyName,
     account: accountName,
-    currency: "SGD",
+    currency: currency ?? "SGD",
     amount,
-    description: row[1],
+    description: row[1] + " " + row[3],
     transactionMethod: TransactionMethods.transfer.name,
     transactionType: TransactionTypes.investments,
   };
@@ -109,11 +126,16 @@ export const parseMoomooFormat: PDFFormatParser = (textData, accountName, compan
   }
 
   let splitTableCoord;
+  let currency;
   let prevIdx: number = 0;
 
   for (let i = 0; i < documentSections["Changes in Cash"].length; i++) {
     const prevTextItem = documentSections["Changes in Cash"][prevIdx];
     const textItem = documentSections["Changes in Cash"][i];
+    const extractedCurr = extractCurrency(textItem.str);
+    if (extractedCurr) {
+      currency = extractedCurr;
+    }
     if (textItem.str === "Date/Time" && !splitTableCoord) {
       splitTableCoord = textItem.transform[4];
     }
@@ -127,8 +149,10 @@ export const parseMoomooFormat: PDFFormatParser = (textData, accountName, compan
       row.push(textItem.str);
     } else {
       if (isValidRowCash(row)) {
-        const parsedRow = parseRowCash(row, accountName, companyName);
-        result.push(parsedRow);
+        const parsedRow = parseRowCash(row, accountName, companyName, currency);
+        if (parsedRow) {
+          result.push(parsedRow);
+        }
       }
       row = [textItem.str];
     }
