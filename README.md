@@ -1,38 +1,36 @@
-# Office-Addin-TaskPane-React
+# Moneyleh-excel-Addin
 
-This repository contains the source code used by the [Yo Office generator](https://github.com/OfficeDev/generator-office) when you create a new Office Add-in that appears in the task pane. You can also use this repository as a sample to base your own project from if you choose not to use the generator.
+- Microsoft excel add in developed using vite instead of webpack. Based off of [this starter template](https://github.com/ExtraBB/Office-Addin-React-Vite-Template). With dependencies updated.
+- Easily convert your bank statements into your excel sheet of choice.
 
-## TypeScript
+> Singapore based financial statement parsing only
 
-This template is written using [TypeScript](http://www.typescriptlang.org/). For the JavaScript version of this template, go to [Office-Addin-TaskPane-React-JS](https://github.com/OfficeDev/Office-Addin-TaskPane-React-JS).
+## How to
 
-## Debugging
+TODO: fill up this section
 
-This template supports debugging using any of the following techniques:
+## Supported Statement Formats
 
-- [Use a browser's developer tools](https://learn.microsoft.com/office/dev/add-ins/testing/debug-add-ins-in-office-online)
-- [Attach a debugger from the task pane](https://learn.microsoft.com/office/dev/add-ins/testing/attach-debugger-from-task-pane)
-- [Use F12 developer tools on Windows 10](https://learn.microsoft.com/office/dev/add-ins/testing/debug-add-ins-using-f12-developer-tools-on-windows-10)
+1. DBS account csv statement
+2. DBS credit card PDF statement
+3. UOB credit card and account xls statements
+4. HSBC credit card csv statement
+5. Moomoo monthly PDF statement
+6. IBKR Flex CSV Report
+7. Chocolate Finance monthly PDF statement
+8. CPF Monthly PDF statement
+9. Trust bank credit card monthly PDF statement
 
-## Questions and comments
+## Develop
 
-We'd love to get your feedback about this sample. You can send your feedback to us in the *Issues* section of this repository.
+#### Prerequisites
 
-Questions about Office Add-ins development in general should be posted to [Microsoft Q&A](https://learn.microsoft.com/answers/questions/185087/questions-about-office-add-ins.html). If your question is about the Office JavaScript APIs, make sure it's tagged with [office-js-dev].
+1. MacOS or Windows only, no WSL as there is no support for it when you want to debug
 
-## Join the Microsoft 365 Developer Program
+#### Start up
 
-Join the [Microsoft 365 Developer Program](https://aka.ms/m365devprogram) to get resources and information to help you build solutions for the Microsoft 365 platform, including recommendations tailored to your areas of interest.
+1. To start the server run `npm run dev`
+2. Then run `npm run start`, this should bring up a temporary excel spreadsheet with your add in attached so you can view the add in and debug.
+3. Once done developing run `npm run stop`. You can also close the spreadsheet.
 
-You might also qualify for a free developer subscription that's renewable for 90 days and comes configured with sample data; for details, see the [FAQ](https://learn.microsoft.com/office/developer-program/microsoft-365-developer-program-faq#who-qualifies-for-a-microsoft-365-e5-developer-subscription-).
-
-## Additional resources
-
-- [Office Add-ins documentation](https://learn.microsoft.com/office/dev/add-ins/overview/office-add-ins)
-- More Office Add-ins samples at [OfficeDev on Github](https://github.com/officedev)
-
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information, see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
-## Copyright
-
-Copyright (c) 2021 Microsoft Corporation. All rights reserved.
+> For more information refer to the official docs [here](https://learn.microsoft.com/en-us/office/dev/add-ins/excel/).
