@@ -1,7 +1,15 @@
 import * as React from "react";
-import { Field, Input, Label, makeStyles } from "@fluentui/react-components";
+import {
+  Combobox,
+  ComboboxProps,
+  Field,
+  Input,
+  Label,
+  makeStyles,
+  useComboboxFilter,
+} from "@fluentui/react-components";
 import { routeToParsers } from "../../lib/parsers/parser";
-import { insertRange } from "../../lib/excel";
+import { getColumnValues, insertRange } from "../../lib/excel";
 import { useState } from "react";
 import { Transaction } from "../../lib/parsers/parser.types";
 
@@ -26,7 +34,31 @@ const App: React.FC<AppProps> = () => {
   const [password, setPassword] = useState<string>("");
   const [errorState, setErrorState] = useState<"none" | "error" | "warning" | "success" | undefined>("none");
   const [errorMsg, setErrorMsg] = useState<string>("");
+  const [companyNames, setCompanyNames] = useState<any[]>([]);
+  const [accountNames, setAccountNames] = useState<any[]>([]);
   const styles = useStyles();
+
+  React.useEffect(() => {
+    const getCompanyNames = async () => {
+      const companySet = new Set();
+      const allNames = await getColumnValues("Company");
+      allNames.map((name) => {
+        companySet.add(name[0]);
+      });
+      setCompanyNames([...companySet] as any[]);
+    };
+    const getAccountNames = async () => {
+      const accountSet = new Set();
+      const allNames = await getColumnValues("Account");
+      allNames.map((name) => {
+        accountSet.add(name[0]);
+      });
+      setAccountNames([...accountSet] as any[]);
+    };
+
+    getCompanyNames();
+    getAccountNames();
+  }, []);
 
   const handleCompanyNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCompanyName(e.currentTarget.value);
@@ -63,13 +95,43 @@ const App: React.FC<AppProps> = () => {
     }
   };
 
+  const companyComboboxChildren = useComboboxFilter(companyName, companyNames, {
+    noOptionsMessage: "Couldn't find company!",
+  });
+  const accountComboboxChildren = useComboboxFilter(accountName, accountNames, {
+    noOptionsMessage: "Couldn't find account!",
+  });
+
+  const onCompanyOptionSelect: ComboboxProps["onOptionSelect"] = (_, data) => {
+    setCompanyName(data.optionText ?? "");
+  };
+  const onAccountOptionSelect: ComboboxProps["onOptionSelect"] = (_, data) => {
+    setAccountName(data.optionText ?? "");
+  };
+
   return (
     <div className={styles.root}>
       <Field label="Company Name" hint="Company name to be filled">
-        <Input value={companyName} onChange={handleCompanyNameChange}></Input>
+        <Combobox
+          placeholder="type to search companies, leave text to fill new company"
+          clearable
+          freeform
+          onOptionSelect={onCompanyOptionSelect}
+          onChange={handleCompanyNameChange}
+        >
+          {companyComboboxChildren}
+        </Combobox>
       </Field>
       <Field label="Account Name" hint="Account name to be filled">
-        <Input value={accountName} onChange={handleAccountNameChange}></Input>
+        <Combobox
+          placeholder="type to search accounts, leave text to fill new account"
+          clearable
+          freeform
+          onOptionSelect={onAccountOptionSelect}
+          onChange={handleAccountNameChange}
+        >
+          {accountComboboxChildren}
+        </Combobox>
       </Field>
       <Field label="Password" hint="If the file has any password">
         <Input type="password" value={password} onChange={handlePasswordChange}></Input>
