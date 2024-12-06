@@ -36,9 +36,9 @@ const formatTrustCardRow = (row: string[], accountName: string, companyName: str
   const isShortRow = row.length === 5;
   let amount = 0;
   if (isShortRow) {
-    amount = parseFloat(row[4].replace("+", ""));
+    amount = parseFloat(row[4].replace("+", "").replace(",", ""));
   } else {
-    amount = parseFloat(row[7]) * -1;
+    amount = parseFloat(row[7].replace(",", "")) * -1;
   }
   const description = isShortRow ? row[2] : row.slice(2, 7).join("_");
   const { transactionMethod, transactionType } = descriptionToTags(description);
