@@ -20,8 +20,8 @@ const filterChocolateData = (text: string) => {
 };
 
 const extractChocolateYear = (text: string) => {
-  if (extendedDayjs(text, "D MM YYYY - D MM YYYY").isValid()) {
-    return text.slice(-1, -5);
+  if (extendedDayjs(text, "D MMM YYYY - D MMM YYYY").isValid()) {
+    return text.slice(-4);
   }
   return "";
 };

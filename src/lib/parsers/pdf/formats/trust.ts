@@ -1,8 +1,6 @@
-import { extendedDayjs } from "../../../utils/dayjs";
+import { extendedDayjs, formatTransactionDate } from "../../../utils/dayjs";
 import { descriptionToTags } from "../../description";
 import { isTextItem, PDFFormatChecker, PDFFormatParser } from "../../parser.types";
-import { TransactionMethods } from "../../transactionMethods";
-import { TransactionTypes } from "../../transactionTypes";
 import { genericPDFDataExtractor } from "../pdfParser";
 
 export const isTrustCardFormat: PDFFormatChecker = (data) => {
@@ -18,8 +16,8 @@ const filterTrustCardFormat = (text: string) => {
 };
 
 const getTrustCardYear = (text: string) => {
-  if (extendedDayjs(text, "DD MMM YYYY").isValid()) {
-    return text.slice(-1, -5);
+  if (extendedDayjs(text, "D MMM YYYY").isValid()) {
+    return text.slice(-4);
   }
   return "";
 };
@@ -32,7 +30,7 @@ const stopExtractionTrustCard = (text: string) => {
   return text === "Total outstanding balance";
 };
 
-const formatTrustCardRow = (row: string[], accountName: string, companyName: string) => {
+const formatTrustCardRow = (row: string[], statementYear: string, accountName: string, companyName: string) => {
   const isShortRow = row.length === 5;
   let amount = 0;
   if (isShortRow) {
@@ -43,7 +41,7 @@ const formatTrustCardRow = (row: string[], accountName: string, companyName: str
   const description = isShortRow ? row[2] : row.slice(2, 7).join("_");
   const { transactionMethod, transactionType } = descriptionToTags(description);
   return {
-    date: extendedDayjs(row[0]).format("DD MMM"),
+    date: formatTransactionDate(row[0] + statementYear, "DD MMMYYYY") ?? row[0],
     transactionTag: "",
     company: companyName,
     account: accountName,

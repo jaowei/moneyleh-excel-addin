@@ -17,8 +17,8 @@ const filterCPFData = (text: string) => {
 };
 
 const getCPFYear = (text: string) => {
-  if (extendedDayjs(text.slice(5, 16), "DD MM YYYY").isValid()) {
-    return text.slice(-1, -6).replace(")", "");
+  if (extendedDayjs(text.slice(5, 16), "DD MMM YYYY").isValid()) {
+    return text.slice(-5).replace(")", "");
   }
   return "";
 };
@@ -37,6 +37,7 @@ const extractAmount = (data: string) => {
 
 const formatCPFRow = (row: string[], year: string, _: string, companyName: string) => {
   const isShortRow = row.length === 9;
+  console.log(year);
   const date = formatTransactionDate(row[0], "DD MM YYYY") + year;
   const transactionTag = "";
   const company = companyName;
