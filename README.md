@@ -7,7 +7,20 @@
 
 ## How to
 
-TODO: fill up this section
+#### Prerequisites
+
+1. Microsoft Excel installed locally (MacOS)
+2. Microsoft Excel online (Windows/MacOS)
+
+#### Install the addin
+
+1. Download the file `src/manifest.prod.xml` from this repository and save it on your device.
+2. Sideload the addin for MacOS, follow instructions [here](https://learn.microsoft.com/en-us/office/dev/add-ins/testing/sideload-an-office-add-in-on-mac)
+3. Sideload the addin on Windows, you can only do this on the web version. Follow instructions [here](https://learn.microsoft.com/en-us/office/dev/add-ins/testing/sideload-office-add-ins-for-testing)
+
+> The addin has a static build and files are hosted on cloudflare pages at this link: https://moneyleh-excel-addin.pages.dev/taskpane
+
+#### Use
 
 ## Supported Statement Formats
 
@@ -25,7 +38,8 @@ TODO: fill up this section
 
 #### Prerequisites
 
-1. MacOS or Windows only, no WSL as there is no support for it when you want to debug
+1. MacOS or Windows only, no WSL as there is no support for opening excel when you want to debug
+2. Valid Microsoft Excel installed
 
 #### Start up
 
@@ -34,3 +48,24 @@ TODO: fill up this section
 3. Once done developing run `npm run stop`. You can also close the spreadsheet.
 
 > For more information refer to the official docs [here](https://learn.microsoft.com/en-us/office/dev/add-ins/excel/).
+
+## Further Enhancements
+
+1. Add accounts overview
+
+   - Shows latest transaction, remind if account not updated
+   - Shows total value of account
+
+2. Auto tagging
+
+   - Automatically tag categories on transactions
+   - Test if possible to add client side Naive Bayes classifier
+
+3. Spending analysis & Budgeting
+
+   - Analyse money inflows and outflows
+   - Find trends of large recurring payments
+   - Suggest budgets
+
+4. Investment analysis
+   - Determine portfolio CAGR/TWR/MWR
