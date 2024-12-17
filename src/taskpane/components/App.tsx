@@ -1,17 +1,9 @@
 import * as React from "react";
-import {
-  Combobox,
-  ComboboxProps,
-  Field,
-  Input,
-  Label,
-  makeStyles,
-  useComboboxFilter,
-} from "@fluentui/react-components";
-import { routeToParsers } from "../../lib/parsers/parser";
-import { getColumnValues, insertRange } from "../../lib/excel";
+import { makeStyles, SelectTabEventHandler, Tab, TabList, TabValue } from "@fluentui/react-components";
 import { useState } from "react";
-import { Transaction } from "../../lib/parsers/parser.types";
+import { DataInput } from "./DataInput";
+import { AccountOverview } from "./AccountOverview";
+import { getColumnValues } from "../../lib/excel";
 
 interface AppProps {
   title: string;
@@ -19,131 +11,65 @@ interface AppProps {
 
 const useStyles = makeStyles({
   root: {
-    height: "100%",
-    padding: "8px",
+    height: "100vh",
     display: "flex",
     flexDirection: "column",
-    gap: "16px",
   },
 });
 
 const App: React.FC<AppProps> = () => {
-  const [accountName, setAccountName] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [formatName, setFormatName] = useState<string | undefined>("");
-  const [password, setPassword] = useState<string>("");
-  const [errorState, setErrorState] = useState<"none" | "error" | "warning" | "success" | undefined>("none");
-  const [errorMsg, setErrorMsg] = useState<string>("");
+  const [selectedPanel, setSelectedPanel] = useState<TabValue>("data-input");
   const [companyNames, setCompanyNames] = useState<any[]>([]);
   const [accountNames, setAccountNames] = useState<any[]>([]);
+  const [combiMap, setCombiMap] = useState<Record<string, Set<string>>>();
   const styles = useStyles();
 
   React.useEffect(() => {
-    const getCompanyNames = async () => {
+    const getCombinations = async () => {
       const companySet = new Set();
-      const allNames = await getColumnValues("Company");
-      allNames.map((name) => {
-        companySet.add(name[0]);
-      });
-      setCompanyNames([...companySet] as any[]);
-    };
-    const getAccountNames = async () => {
       const accountSet = new Set();
-      const allNames = await getColumnValues("Account");
-      allNames.map((name) => {
-        accountSet.add(name[0]);
-      });
+      const combiMap: Record<string, Set<string>> = {};
+      const accountNames = await getColumnValues("Account");
+      const companyNames = await getColumnValues("Company");
+      for (let i = 0; i < accountNames.length; i++) {
+        const companyName = companyNames[i][0];
+        const accountName = accountNames[i][0];
+        if (combiMap[companyName]) {
+          combiMap[companyName].add(accountName);
+        } else {
+          combiMap[companyName] = new Set([accountName]);
+        }
+        companySet.add(companyName);
+        accountSet.add(accountName);
+      }
+      setCompanyNames([...companySet] as any[]);
       setAccountNames([...accountSet] as any[]);
+      setCombiMap(combiMap);
     };
 
-    getCompanyNames();
-    getAccountNames();
+    getCombinations();
   }, []);
 
-  const handleCompanyNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCompanyName(e.currentTarget.value);
-  };
-
-  const handleAccountNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAccountName(e.currentTarget.value);
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.currentTarget.value);
-  };
-
-  const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      setErrorState("none");
-      setErrorMsg("");
-      const file = e.target.files?.[0];
-      const result = await routeToParsers(file, accountName, companyName, password);
-      const tempData = result?.rowData?.map((row: Transaction) => {
-        return [...Object.values(row), `=TEXT([@Date], "yyyy-mm")`];
-      });
-      setFormatName(result?.formatName);
-      insertRange(tempData);
-    } catch (error: any) {
-      setErrorState("error");
-      if (error.name === "PasswordException") {
-        setErrorMsg("File is password protected, please enter password!");
-      } else {
-        setErrorMsg(`Error: ${error.message}`);
-      }
-      // clear the file from input
-      e.target.value = "";
-    }
-  };
-
-  const companyComboboxChildren = useComboboxFilter(companyName, companyNames, {
-    noOptionsMessage: "Couldn't find company!",
-  });
-  const accountComboboxChildren = useComboboxFilter(accountName, accountNames, {
-    noOptionsMessage: "Couldn't find account!",
-  });
-
-  const onCompanyOptionSelect: ComboboxProps["onOptionSelect"] = (_, data) => {
-    setCompanyName(data.optionText ?? "");
-  };
-  const onAccountOptionSelect: ComboboxProps["onOptionSelect"] = (_, data) => {
-    setAccountName(data.optionText ?? "");
+  const handleTabSelect: SelectTabEventHandler = (_, data) => {
+    setSelectedPanel(data.value);
   };
 
   return (
     <div className={styles.root}>
-      <Field label="Company Name" hint="Company name to be filled">
-        <Combobox
-          placeholder="type to search companies, leave text to fill new company"
-          clearable
-          freeform
-          onOptionSelect={onCompanyOptionSelect}
-          onChange={handleCompanyNameChange}
-        >
-          {companyComboboxChildren}
-        </Combobox>
-      </Field>
-      <Field label="Account Name" hint="Account name to be filled">
-        <Combobox
-          placeholder="type to search accounts, leave text to fill new account"
-          clearable
-          freeform
-          onOptionSelect={onAccountOptionSelect}
-          onChange={handleAccountNameChange}
-        >
-          {accountComboboxChildren}
-        </Combobox>
-      </Field>
-      <Field label="Password" hint="If the file has any password">
-        <Input type="password" value={password} onChange={handlePasswordChange}></Input>
-      </Field>
-      <Field label="Select file" required validationState={errorState} validationMessage={errorMsg}>
-        <input type="file" onChange={handleFileInputChange}></input>
-      </Field>
-      <Field label="Detected statement format">
-        <Label size="large" weight="semibold">
-          {formatName ?? "No statement chosen"}
-        </Label>
-      </Field>
+      <TabList selectedValue={selectedPanel} onTabSelect={handleTabSelect} size="small" appearance="subtle">
+        <Tab id="data-input" value="data-input">
+          Data Input
+        </Tab>
+        <Tab id="account-overview" value="account-overview">
+          Account Overview
+        </Tab>
+      </TabList>
+      <div>
+        {selectedPanel === "data-input" && <DataInput accountNames={accountNames} companyNames={companyNames} />}
+        {selectedPanel === "account-overview" && (
+          <AccountOverview accountNames={accountNames} companyNames={companyNames} combiMap={combiMap} />
+        )}
+      </div>
     </div>
   );
 };
