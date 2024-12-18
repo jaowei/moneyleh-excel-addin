@@ -51,10 +51,10 @@
 
 ## Further Enhancements
 
-1. Add accounts overview
+1. Add accounts overview [DONE]
 
-   - Shows latest transaction, remind if account not updated
-   - Shows total value of account
+   - ~~Shows latest transaction, remind if account not updated~~
+   - ~~Shows total value of account~~
 
 2. Auto tagging
 

@@ -19,36 +19,42 @@ const useStyles = makeStyles({
 
 const App: React.FC<AppProps> = () => {
   const [selectedPanel, setSelectedPanel] = useState<TabValue>("data-input");
-  const [companyNames, setCompanyNames] = useState<any[]>([]);
-  const [accountNames, setAccountNames] = useState<any[]>([]);
-  const [combiMap, setCombiMap] = useState<Record<string, Set<string>>>();
+  const [allCompanyNames, setAllCompanyNames] = useState<any[]>([]);
+  const [allAccountNames, setAllAccountNames] = useState<any[]>([]);
   const styles = useStyles();
 
   React.useEffect(() => {
     const getCombinations = async () => {
-      const companySet = new Set();
-      const accountSet = new Set();
-      const combiMap: Record<string, Set<string>> = {};
       const accountNames = await getColumnValues("Account");
       const companyNames = await getColumnValues("Company");
-      for (let i = 0; i < accountNames.length; i++) {
-        const companyName = companyNames[i][0];
-        const accountName = accountNames[i][0];
-        if (combiMap[companyName]) {
-          combiMap[companyName].add(accountName);
-        } else {
-          combiMap[companyName] = new Set([accountName]);
-        }
-        companySet.add(companyName);
-        accountSet.add(accountName);
-      }
-      setCompanyNames([...companySet] as any[]);
-      setAccountNames([...accountSet] as any[]);
-      setCombiMap(combiMap);
+      setAllCompanyNames(companyNames as any[]);
+      setAllAccountNames(accountNames as any[]);
     };
 
     getCombinations();
   }, []);
+
+  const { accountNames, companyNames, combiMap } = React.useMemo(() => {
+    const companySet = new Set();
+    const accountSet = new Set();
+    const combiMap: Record<string, Set<string>> = {};
+    for (let i = 0; i < allAccountNames.length; i++) {
+      const companyName = allCompanyNames[i][0];
+      const accountName = allAccountNames[i][0];
+      if (combiMap[companyName]) {
+        combiMap[companyName].add(accountName);
+      } else {
+        combiMap[companyName] = new Set([accountName]);
+      }
+      companySet.add(companyName);
+      accountSet.add(accountName);
+    }
+    return {
+      accountNames: [...accountSet],
+      companyNames: [...companySet],
+      combiMap,
+    };
+  }, [allAccountNames, allCompanyNames]);
 
   const handleTabSelect: SelectTabEventHandler = (_, data) => {
     setSelectedPanel(data.value);
@@ -67,7 +73,7 @@ const App: React.FC<AppProps> = () => {
       <div>
         {selectedPanel === "data-input" && <DataInput accountNames={accountNames} companyNames={companyNames} />}
         {selectedPanel === "account-overview" && (
-          <AccountOverview accountNames={accountNames} companyNames={companyNames} combiMap={combiMap} />
+          <AccountOverview accountNames={allAccountNames} companyNames={allCompanyNames} combiMap={combiMap} />
         )}
       </div>
     </div>
