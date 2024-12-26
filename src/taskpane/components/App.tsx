@@ -3,35 +3,75 @@ import { makeStyles, SelectTabEventHandler, Tab, TabList, TabValue } from "@flue
 import { useState } from "react";
 import { DataInput } from "./DataInput";
 import { AccountOverview } from "./AccountOverview";
-import { getColumnValues } from "../../lib/excel";
+import { getColumnValues, registerExcelHandlers } from "../../lib/excel";
+import { NaiveBayesClassifier } from "../../lib/classifier/naive-bayes";
 
 interface AppProps {
   title: string;
 }
 
+export interface Classifiers {
+  methodClassifier: NaiveBayesClassifier;
+  typesClassifier: NaiveBayesClassifier;
+  tagsClassifier: NaiveBayesClassifier;
+}
+
 const useStyles = makeStyles({
   root: {
-    height: "100vh",
+    height: "100%",
     display: "flex",
     flexDirection: "column",
   },
 });
 
+const initClassifier = async (categoryData: string[][], details: string[][]) => {
+  const classifier = new NaiveBayesClassifier();
+  for (let i = 0; i < categoryData.length; i++) {
+    const method = categoryData[i][0];
+    const detail = details[i][0];
+    if (!method || !detail) continue;
+    await classifier.learn(detail, method);
+  }
+  return classifier;
+};
+
 const App: React.FC<AppProps> = () => {
   const [selectedPanel, setSelectedPanel] = useState<TabValue>("data-input");
   const [allCompanyNames, setAllCompanyNames] = useState<any[]>([]);
   const [allAccountNames, setAllAccountNames] = useState<any[]>([]);
+  const [selectedRange, setSelectedRange] = useState<string>();
+  const [classifiers, setClassifiers] = useState<Classifiers>();
   const styles = useStyles();
 
   React.useEffect(() => {
-    const getCombinations = async () => {
+    const initData = async () => {
       const accountNames = await getColumnValues("Account");
       const companyNames = await getColumnValues("Company");
+      const transactionMethods = await getColumnValues("Transaction Method");
+      const transactionType = await getColumnValues("Transaction Type");
+      const tags = await getColumnValues("Type of entry");
+      const details = await getColumnValues("Transaction Details");
       setAllCompanyNames(companyNames as any[]);
       setAllAccountNames(accountNames as any[]);
+      const methodClassifier = await initClassifier(transactionMethods, details);
+      const typesClassifier = await initClassifier(transactionType, details);
+      const tagsClassifier = await initClassifier(tags, details);
+      setClassifiers({
+        methodClassifier,
+        typesClassifier,
+        tagsClassifier,
+      });
     };
 
-    getCombinations();
+    async function handleChange(event: Excel.WorksheetSelectionChangedEventArgs) {
+      await Excel.run(async (context) => {
+        await context.sync();
+        setSelectedRange(event.address);
+      });
+    }
+
+    registerExcelHandlers(handleChange);
+    initData();
   }, []);
 
   const { accountNames, companyNames, combiMap } = React.useMemo(() => {
@@ -71,7 +111,14 @@ const App: React.FC<AppProps> = () => {
         </Tab>
       </TabList>
       <div>
-        {selectedPanel === "data-input" && <DataInput accountNames={accountNames} companyNames={companyNames} />}
+        {selectedPanel === "data-input" && (
+          <DataInput
+            accountNames={accountNames}
+            companyNames={companyNames}
+            selectedRange={selectedRange}
+            classifier={classifiers}
+          />
+        )}
         {selectedPanel === "account-overview" && (
           <AccountOverview accountNames={allAccountNames} companyNames={allCompanyNames} combiMap={combiMap} />
         )}

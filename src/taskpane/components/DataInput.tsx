@@ -1,17 +1,21 @@
 import * as React from "react";
 import {
+  Button,
   Combobox,
   ComboboxProps,
   Field,
   Input,
   Label,
   makeStyles,
+  Tag,
   useComboboxFilter,
 } from "@fluentui/react-components";
 import { routeToParsers } from "../../lib/parsers/parser";
-import { getColumnValues, insertRange } from "../../lib/excel";
+import { getRangeValue, insertRange, setRangeValue } from "../../lib/excel";
 import { useState } from "react";
 import { Transaction } from "../../lib/parsers/parser.types";
+import { NaiveBayesClassifier } from "../../lib/classifier/naive-bayes";
+import { Classifiers } from "./App";
 
 const useStyles = makeStyles({
   root: {
@@ -21,12 +25,71 @@ const useStyles = makeStyles({
     flexDirection: "column",
     gap: "16px",
   },
+  autoPop: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "row",
+    gap: "8px",
+    alignItems: "center",
+  },
 });
 
 interface DataInputProps {
   accountNames: any[];
   companyNames: any[];
+  selectedRange: string | undefined;
+  classifier: Classifiers | undefined;
 }
+
+const classifyRange = async (classifier: NaiveBayesClassifier, cellAddress: string) => {
+  // if there is a value in the target cell do not override
+  const targetCells = await getRangeValue(cellAddress);
+  if (targetCells[0][0]) return;
+
+  const detailsCell = "G" + cellAddress.slice(1);
+  const details = await getRangeValue(detailsCell);
+  const predictions: string[][] = [];
+  details.forEach(async (detail) => {
+    const prediction = await classifier.categorise(detail[0]);
+    if (!prediction) return;
+    predictions.push([prediction]);
+  });
+
+  await setRangeValue(cellAddress, predictions);
+};
+
+const preprocessRange = (range: string, classifers: Classifiers) => {
+  const selectedRanges = range.split(",");
+  return selectedRanges.forEach(async (range) => {
+    // check is individual range is in the same column
+    const cells = range.split(":");
+    const firstColLetter = cells[0][0];
+    let col: string | undefined = firstColLetter;
+    for (let i = 0; i < cells.length; i++) {
+      if (col !== cells[i][0]) {
+        col = undefined;
+        break;
+      }
+      col = cells[i][0];
+    }
+
+    // if not in the same column skip auto pop
+    if (!col) return;
+    switch (col[0]) {
+      case "B":
+        await classifyRange(classifers.tagsClassifier, range);
+        break;
+      case "H":
+        await classifyRange(classifers.methodClassifier, range);
+        break;
+      case "I":
+        await classifyRange(classifers.typesClassifier, range);
+        break;
+      default:
+        break;
+    }
+  });
+};
 
 export const DataInput = (props: DataInputProps) => {
   const [accountName, setAccountName] = useState("");
@@ -86,6 +149,13 @@ export const DataInput = (props: DataInputProps) => {
     setAccountName(data.optionText ?? "");
   };
 
+  const handlePopulateClick = async () => {
+    const classifiers = props.classifier;
+    if (!classifiers || !props.selectedRange) return;
+
+    preprocessRange(props.selectedRange, classifiers);
+  };
+
   return (
     <div className={styles.root}>
       <Field label="Company Name" hint="Company name to be filled">
@@ -118,8 +188,15 @@ export const DataInput = (props: DataInputProps) => {
       </Field>
       <Field label="Detected statement format">
         <Label size="large" weight="semibold">
-          {formatName ?? "No statement chosen"}
+          <Tag appearance="brand">{formatName ?? "No statement chosen"}</Tag>
         </Label>
+      </Field>
+      <Field label="Auto Populate Cell">
+        <div className={styles.autoPop}>
+          Selected:
+          <Tag appearance="brand">{props.selectedRange}</Tag>
+          <Button onClick={handlePopulateClick}>Populate</Button>
+        </div>
       </Field>
     </div>
   );
