@@ -41,54 +41,57 @@ interface DataInputProps {
   classifier: Classifiers | undefined;
 }
 
-const classifyRange = async (classifier: NaiveBayesClassifier, cellAddress: string) => {
-  // if there is a value in the target cell do not override
+const classifyRange = async (classifier: NaiveBayesClassifier, cellAddress: string, colLetter: string) => {
   const targetCells = await getRangeValue(cellAddress);
-  if (targetCells[0][0]) return;
-
-  const detailsCell = "G" + cellAddress.slice(1);
+  const detailsCell = cellAddress.replaceAll(colLetter, "G");
   const details = await getRangeValue(detailsCell);
   const predictions: string[][] = [];
-  details.forEach(async (detail) => {
+  const errors: string[] = [];
+  details.forEach(async (detail, idx) => {
     const prediction = await classifier.categorise(detail[0]);
-    if (!prediction) return;
+    if (!prediction) {
+      errors.push(`No predictions for ${cellAddress}, item ${idx + 1}`);
+      predictions.push([""]);
+      return;
+    }
+    if (targetCells[idx][0]) {
+      errors.push(`${cellAddress}, item ${idx + 1} is already filled, unable to override`);
+      predictions.push([targetCells[idx][0]]);
+      return;
+    }
     predictions.push([prediction]);
   });
 
   await setRangeValue(cellAddress, predictions);
+  return errors;
 };
 
-const preprocessRange = (range: string, classifers: Classifiers) => {
+const preprocessRange = async (range: string, classifers: Classifiers) => {
   const selectedRanges = range.split(",");
-  return selectedRanges.forEach(async (range) => {
-    // check is individual range is in the same column
+  const errors: string[] = [];
+  for (const range of selectedRanges) {
     const cells = range.split(":");
-    const firstColLetter = cells[0][0];
-    let col: string | undefined = firstColLetter;
-    for (let i = 0; i < cells.length; i++) {
-      if (col !== cells[i][0]) {
-        col = undefined;
-        break;
-      }
-      col = cells[i][0];
-    }
+    const inSameColumn = cells.length === 1 || cells[0][0] === cells[1][0];
 
-    // if not in the same column skip auto pop
-    if (!col) return;
-    switch (col[0]) {
+    if (!inSameColumn) {
+      errors.push(`You have selected 2 different columns. Only selections in the same column are allowed`);
+      continue;
+    }
+    switch (cells[0][0]) {
       case "B":
-        await classifyRange(classifers.tagsClassifier, range);
+        errors.push(...(await classifyRange(classifers.tagsClassifier, range, "B")));
         break;
       case "H":
-        await classifyRange(classifers.methodClassifier, range);
+        errors.push(...(await classifyRange(classifers.methodClassifier, range, "H")));
         break;
       case "I":
-        await classifyRange(classifers.typesClassifier, range);
+        errors.push(...(await classifyRange(classifers.typesClassifier, range, "I")));
         break;
       default:
-        break;
+        errors.push(`Auto populate not allowed for column ${cells[0][0]}`);
     }
-  });
+  }
+  return errors;
 };
 
 export const DataInput = (props: DataInputProps) => {
@@ -96,8 +99,14 @@ export const DataInput = (props: DataInputProps) => {
   const [companyName, setCompanyName] = useState("");
   const [formatName, setFormatName] = useState<string | undefined>("");
   const [password, setPassword] = useState<string>("");
-  const [errorState, setErrorState] = useState<"none" | "error" | "warning" | "success" | undefined>("none");
-  const [errorMsg, setErrorMsg] = useState<string>("");
+  const [fileInputErrorState, setFileInputErrorState] = useState<"none" | "error" | "warning" | "success" | undefined>(
+    "none"
+  );
+  const [autoPopErrorState, setAutoPopErrorState] = useState<"none" | "error" | "warning" | "success" | undefined>(
+    "none"
+  );
+  const [fileInputErrorMsg, setFileInputErrorMsg] = useState<string>("");
+  const [autoPopErrorMsg, setAutoPopErrorMsg] = useState<string>("");
   const styles = useStyles();
 
   const handleCompanyNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,8 +123,8 @@ export const DataInput = (props: DataInputProps) => {
 
   const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      setErrorState("none");
-      setErrorMsg("");
+      setFileInputErrorState("none");
+      setFileInputErrorMsg("");
       const file = e.target.files?.[0];
       const result = await routeToParsers(file, accountName, companyName, password);
       const tempData = result?.rowData?.map((row: Transaction) => {
@@ -124,11 +133,11 @@ export const DataInput = (props: DataInputProps) => {
       setFormatName(result?.formatName);
       insertRange(tempData);
     } catch (error: any) {
-      setErrorState("error");
+      setFileInputErrorState("error");
       if (error.name === "PasswordException") {
-        setErrorMsg("File is password protected, please enter password!");
+        setFileInputErrorMsg("File is password protected, please enter password!");
       } else {
-        setErrorMsg(`Error: ${error.message}`);
+        setFileInputErrorMsg(`Error: ${error.message}`);
       }
       // clear the file from input
       e.target.value = "";
@@ -150,10 +159,16 @@ export const DataInput = (props: DataInputProps) => {
   };
 
   const handlePopulateClick = async () => {
+    setAutoPopErrorState("none");
+    setAutoPopErrorMsg("");
     const classifiers = props.classifier;
     if (!classifiers || !props.selectedRange) return;
 
-    preprocessRange(props.selectedRange, classifiers);
+    const errors = await preprocessRange(props.selectedRange, classifiers);
+    if (errors.length) {
+      setAutoPopErrorState("error");
+      setAutoPopErrorMsg(errors.join(" ; "));
+    }
   };
 
   return (
@@ -183,7 +198,7 @@ export const DataInput = (props: DataInputProps) => {
       <Field label="Password" hint="If the file has any password">
         <Input type="password" value={password} onChange={handlePasswordChange}></Input>
       </Field>
-      <Field label="Select file" required validationState={errorState} validationMessage={errorMsg}>
+      <Field label="Select file" required validationState={fileInputErrorState} validationMessage={fileInputErrorMsg}>
         <input type="file" onChange={handleFileInputChange}></input>
       </Field>
       <Field label="Detected statement format">
@@ -191,7 +206,7 @@ export const DataInput = (props: DataInputProps) => {
           <Tag appearance="brand">{formatName ?? "No statement chosen"}</Tag>
         </Label>
       </Field>
-      <Field label="Auto Populate Cell">
+      <Field label="Auto Populate Cell" validationState={autoPopErrorState} validationMessage={autoPopErrorMsg}>
         <div className={styles.autoPop}>
           Selected:
           <Tag appearance="brand">{props.selectedRange}</Tag>

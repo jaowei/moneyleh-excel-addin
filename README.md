@@ -5,7 +5,7 @@
 
 > Singapore based financial statement parsing only
 
-## How to
+## How to use
 
 #### Prerequisites
 
@@ -19,8 +19,6 @@
 3. Sideload the addin on Windows, you can only do this on the web version. Follow instructions [here](https://learn.microsoft.com/en-us/office/dev/add-ins/testing/sideload-office-add-ins-for-testing)
 
 > The addin has a static build and files are hosted on cloudflare pages at this link: https://moneyleh-excel-addin.pages.dev/taskpane
-
-#### Use
 
 ## Supported Statement Formats
 
@@ -58,8 +56,8 @@
 
 2. Auto tagging
 
-   - Automatically tag categories on transactions
-   - Test if possible to add client side Naive Bayes classifier
+   - ~~Automatically tag categories on transactions~~
+   - ~~Test if possible to add client side Naive Bayes classifier~~
 
 3. Spending analysis & Budgeting
 
