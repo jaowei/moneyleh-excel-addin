@@ -54,10 +54,11 @@
    - ~~Shows latest transaction, remind if account not updated~~
    - ~~Shows total value of account~~
 
-2. Auto tagging
+2. Auto tagging [PARTIALLY IMPLEMENTED]
 
    - ~~Automatically tag categories on transactions~~
    - ~~Test if possible to add client side Naive Bayes classifier~~
+   - Currently allows user to populate manually targeted cells, to see if this can be added to the statement parsing process
 
 3. Spending analysis & Budgeting
 

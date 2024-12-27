@@ -1,4 +1,4 @@
-import { makeStyles, Tag, Tree, TreeItem, TreeItemLayout } from "@fluentui/react-components";
+import { makeStyles, Spinner, Tag, Tree, TreeItem, TreeItemLayout } from "@fluentui/react-components";
 import { useEffect, useMemo, useState } from "react";
 import { getColumnValues } from "../../lib/excel";
 import { extendedDayjs } from "../../lib/utils/dayjs";
@@ -9,18 +9,24 @@ interface AccountOverviewProps {
   combiMap?: Record<string, Set<string>>;
 }
 
+interface TotalValueSummary {
+  [key: string]: number;
+}
+
 interface AccountSummary {
   latestTransactionDate?: string;
-  totalValue: number;
+  totalValue: TotalValueSummary;
 }
 interface CompanySummary {
-  totalValue: number;
+  totalValue: TotalValueSummary;
   accounts: Record<string, AccountSummary>;
 }
 
 const useStyles = makeStyles({
   root: {
     height: "100%",
+    display: "flex",
+    gap: "6px",
   },
 });
 
@@ -32,19 +38,33 @@ const roundDecimals = (num: number) => {
   return Math.round(num * 100) / 100;
 };
 
-export const AccountOverview = (props: AccountOverviewProps) => {
-  const companyAccountCombination = props?.combiMap;
+const formatValue = (num: number, currency: string) => {
+  return new Intl.NumberFormat(navigator.language, {
+    style: "currency",
+    currency,
+  }).format(roundDecimals(num));
+};
 
+const renderValueTag = (valData: [string, number]) => (
+  <Tag key={valData[0]} size="extra-small" appearance="brand" shape="circular">
+    {formatValue(valData[1], valData[0])}
+  </Tag>
+);
+
+export const AccountOverview = (props: AccountOverviewProps) => {
   const [allDates, setAllDates] = useState<any[]>([]);
   const [allAmounts, setAllAmounts] = useState<any[]>([]);
+  const [allCurrencies, setAllCurencies] = useState<any[]>([]);
   const styles = useStyles();
 
   useEffect(() => {
     const getLatestDate = async () => {
       const dates = await getColumnValues("Date");
       const amounts = await getColumnValues("Amount");
+      const currencies = await getColumnValues("Currency");
       setAllDates(dates);
       setAllAmounts(amounts);
+      setAllCurencies(currencies);
     };
 
     getLatestDate();
@@ -54,63 +74,91 @@ export const AccountOverview = (props: AccountOverviewProps) => {
     const accountNames = props?.accountNames;
     const companyNames = props?.companyNames;
     const combiMap = props?.combiMap;
-    if (!accountNames || !combiMap || !companyNames) return {};
+    const mainCurrency: string = "SGD";
+    if (!accountNames || !combiMap || !companyNames || !allDates)
+      return {
+        companySummary: undefined,
+      };
     const companySummaryMap: Record<string, CompanySummary> = {};
 
     Object.entries(combiMap).forEach((data) => {
       const accounts: Record<string, any> = {};
       Array.from(data[1]).forEach((accts) => {
         accounts[accts] = {
-          totalValue: 0,
+          totalValue: {},
         };
       });
       companySummaryMap[data[0]] = {
         accounts,
-        totalValue: 0,
+        totalValue: {},
       };
     });
     for (let i = 0; i < accountNames.length; i++) {
       const companyName = companyNames[i];
       const accountName = accountNames[i];
+      const currency = allCurrencies[i];
       const currDate = extendedDayjs(convertExcelDateToJS(allDates[i]));
       const currValue = parseFloat(allAmounts[i]);
       const existingDate = extendedDayjs(
         companySummaryMap[companyName].accounts[accountName].latestTransactionDate,
         "DD/MM/YYYY"
       );
-      companySummaryMap[companyName].totalValue += currValue;
-      companySummaryMap[companyName].accounts[accountName].totalValue += currValue;
+
+      if (companySummaryMap[companyName].totalValue[currency] === undefined) {
+        companySummaryMap[companyName].totalValue[currency] = currValue;
+      } else {
+        companySummaryMap[companyName].totalValue[currency] += currValue;
+      }
+
+      if (companySummaryMap[companyName].accounts[accountName].totalValue[currency] === undefined) {
+        companySummaryMap[companyName].accounts[accountName].totalValue[currency] = currValue;
+      } else {
+        companySummaryMap[companyName].accounts[accountName].totalValue[currency] += currValue;
+      }
+
       if (!existingDate.isValid() || (existingDate && currDate.isAfter(existingDate))) {
         companySummaryMap[companyName].accounts[accountName].latestTransactionDate = currDate.format("DD/MM/YYYY");
       }
     }
 
+    const sorted: Record<string, CompanySummary> = {};
+    Object.entries(companySummaryMap)
+      .sort((a, b) => b[1].totalValue[mainCurrency] - a[1].totalValue[mainCurrency])
+      .forEach((val) => {
+        sorted[val[0]] = val[1];
+      });
+
     return {
-      companySummary: companySummaryMap,
+      companySummary: sorted,
     };
   }, [allDates]);
 
-  if (!companyAccountCombination) {
-    return <div>No accounts to view!</div>;
+  if (
+    (props?.companyNames &&
+      companySummary?.[props.companyNames[0]].totalValue &&
+      !Object.values(companySummary?.[props.companyNames[0]].totalValue)[0]) ||
+    !companySummary
+  ) {
+    return (
+      <div className={styles.root}>
+        <Spinner size="huge" label="Loading summary..." />
+      </div>
+    );
   }
 
   return (
     <Tree className={styles.root} size="small" aria-label="accounts">
-      {Object.entries(companyAccountCombination).map((coyAndAccts) => {
-        const companyData = companySummary?.[coyAndAccts[0]];
-        if (!companyData) return <div />;
+      {Object.entries(companySummary).map((coyAndAccts) => {
         return (
           <TreeItem key={coyAndAccts[0]} itemType="branch">
             <TreeItemLayout>
-              <Tag size="extra-small" appearance="filled" shape="circular">
+              <Tag size="extra-small" appearance="outline">
                 {coyAndAccts[0]}
               </Tag>
-              <Tag size="extra-small" appearance="brand" shape="circular">
-                ${roundDecimals(companyData.totalValue)}
-              </Tag>
+              {Object.entries(coyAndAccts[1].totalValue).map((valData) => renderValueTag(valData))}
             </TreeItemLayout>
             <Tree>
-              {Object.entries(companyData.accounts).map((acctData) => (
+              {Object.entries(coyAndAccts[1].accounts).map((acctData) => (
                 <TreeItem key={acctData[0]} itemType="leaf">
                   <TreeItemLayout>
                     <Tag size="extra-small" appearance="outline">
@@ -119,9 +167,7 @@ export const AccountOverview = (props: AccountOverviewProps) => {
                     <Tag size="extra-small" appearance="filled">
                       {acctData[1]?.latestTransactionDate}
                     </Tag>
-                    <Tag size="extra-small" appearance="brand">
-                      ${roundDecimals(acctData[1]?.totalValue)}
-                    </Tag>
+                    {Object.entries(acctData[1]?.totalValue).map((valData) => renderValueTag(valData))}
                   </TreeItemLayout>
                 </TreeItem>
               ))}
