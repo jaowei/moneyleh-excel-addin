@@ -67,4 +67,12 @@
    - Suggest budgets
 
 4. Investment analysis
+
    - Determine portfolio CAGR/TWR/MWR
+
+5. Tag overview
+
+   - Find amounts spent per tag
+   - Search through tags, filter through them
+   - Filter through time periods per tag
+   - Lookup tags in combinations

@@ -16,8 +16,9 @@ const filterTrustCardFormat = (text: string) => {
 };
 
 const getTrustCardYear = (text: string) => {
-  if (extendedDayjs(text, "D MMM YYYY").isValid()) {
-    return text.slice(-4);
+  const date = extendedDayjs(text, "D MMM YYYY");
+  if (date.isValid()) {
+    return date.year().toString();
   }
   return "";
 };

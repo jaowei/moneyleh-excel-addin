@@ -42,9 +42,9 @@ export const parseDBSAppFormat: CSVFormatParser = (parsedContent, accountName, c
   let currency = "SGD";
   return parsedContent.data.reduce((prev: Array<Transaction>, curr: Array<string>) => {
     if (curr[0] === "Currency:") {
-      currency = curr[1].slice(0, 4);
+      currency = curr[1].slice(0, 4).trim();
     }
-    if (extendedDayjs(curr[0], "D MMM YYYY").isValid()) {
+    if (extendedDayjs(curr[0]).isValid()) {
       let amount = 0;
       const debitAmt = curr.at(4)?.trim();
       const creditAmt = curr.at(5)?.trim();
@@ -56,7 +56,7 @@ export const parseDBSAppFormat: CSVFormatParser = (parsedContent, accountName, c
       const description = curr.slice(-4, -1).join(" ");
       const { transactionMethod, transactionType } = descriptionToTags(description);
       prev.push({
-        date: formatTransactionDate(curr[0], "D-MMM-YYYY") ?? "",
+        date: formatTransactionDate(curr[0], "") ?? "",
         transactionTag: "",
         company: companyName,
         account: accountName,

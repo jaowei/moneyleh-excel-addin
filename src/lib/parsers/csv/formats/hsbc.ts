@@ -16,7 +16,7 @@ export const parseHSBCFormat: CSVFormatParser = (parsedContent, accountName, com
       company: companyName,
       account: accountName,
       currency: description.slice(-3),
-      amount: parseFloat(data[2]),
+      amount: parseFloat(data[2].replace(",", "")),
       description,
       transactionMethod: transactionMethod,
       transactionType: transactionType,
