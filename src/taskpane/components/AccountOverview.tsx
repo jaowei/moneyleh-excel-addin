@@ -25,8 +25,15 @@ interface CompanySummary {
 const useStyles = makeStyles({
   root: {
     height: "100%",
+    width: "100%",
     display: "flex",
-    gap: "6px",
+    gap: "10px",
+    flexDirection: "column",
+  },
+  netWorth: {
+    display: "flex",
+    gap: "10px",
+    paddingLeft: "10px",
   },
 });
 
@@ -70,7 +77,7 @@ export const AccountOverview = (props: AccountOverviewProps) => {
     getLatestDate();
   }, []);
 
-  const { companySummary } = useMemo(() => {
+  const { companySummary, totalNetWorth } = useMemo(() => {
     const accountNames = props?.accountNames;
     const companyNames = props?.companyNames;
     const combiMap = props?.combiMap;
@@ -80,6 +87,7 @@ export const AccountOverview = (props: AccountOverviewProps) => {
         companySummary: undefined,
       };
     const companySummaryMap: Record<string, CompanySummary> = {};
+    const totalNetWorth: Record<string, number> = {};
 
     Object.entries(combiMap).forEach((data) => {
       const accounts: Record<string, any> = {};
@@ -119,6 +127,12 @@ export const AccountOverview = (props: AccountOverviewProps) => {
       if (!existingDate.isValid() || (existingDate && currDate.isAfter(existingDate))) {
         companySummaryMap[companyName].accounts[accountName].latestTransactionDate = currDate.format("DD/MM/YYYY");
       }
+
+      if (totalNetWorth[currency] === undefined) {
+        totalNetWorth[currency] = currValue;
+      } else {
+        totalNetWorth[currency] += currValue;
+      }
     }
 
     const sorted: Record<string, CompanySummary> = {};
@@ -130,6 +144,7 @@ export const AccountOverview = (props: AccountOverviewProps) => {
 
     return {
       companySummary: sorted,
+      totalNetWorth,
     };
   }, [allDates]);
 
@@ -147,34 +162,42 @@ export const AccountOverview = (props: AccountOverviewProps) => {
   }
 
   return (
-    <Tree className={styles.root} size="small" aria-label="accounts">
-      {Object.entries(companySummary).map((coyAndAccts) => {
-        return (
-          <TreeItem key={coyAndAccts[0]} itemType="branch">
-            <TreeItemLayout>
-              <Tag size="extra-small" appearance="outline">
-                {coyAndAccts[0]}
-              </Tag>
-              {Object.entries(coyAndAccts[1].totalValue).map((valData) => renderValueTag(valData))}
-            </TreeItemLayout>
-            <Tree>
-              {Object.entries(coyAndAccts[1].accounts).map((acctData) => (
-                <TreeItem key={acctData[0]} itemType="leaf">
-                  <TreeItemLayout>
-                    <Tag size="extra-small" appearance="outline">
-                      {acctData[0]}
-                    </Tag>
-                    <Tag size="extra-small" appearance="filled">
-                      {acctData[1]?.latestTransactionDate}
-                    </Tag>
-                    {Object.entries(acctData[1]?.totalValue).map((valData) => renderValueTag(valData))}
-                  </TreeItemLayout>
-                </TreeItem>
-              ))}
-            </Tree>
-          </TreeItem>
-        );
-      })}
-    </Tree>
+    <div className={styles.root}>
+      <div className={styles.netWorth}>
+        <Tag appearance="outline">Total Net Worth:</Tag>
+        {Object.entries(totalNetWorth).map((nwData) => (
+          <Tag appearance="brand">{formatValue(nwData[1], nwData[0])}</Tag>
+        ))}
+      </div>
+      <Tree size="small" aria-label="accounts">
+        {Object.entries(companySummary).map((coyAndAccts) => {
+          return (
+            <TreeItem key={coyAndAccts[0]} itemType="branch">
+              <TreeItemLayout>
+                <Tag size="extra-small" appearance="outline">
+                  {coyAndAccts[0]}
+                </Tag>
+                {Object.entries(coyAndAccts[1].totalValue).map((valData) => renderValueTag(valData))}
+              </TreeItemLayout>
+              <Tree>
+                {Object.entries(coyAndAccts[1].accounts).map((acctData) => (
+                  <TreeItem key={acctData[0]} itemType="leaf">
+                    <TreeItemLayout>
+                      <Tag size="extra-small" appearance="outline">
+                        {acctData[0]}
+                      </Tag>
+                      <Tag size="extra-small" appearance="filled">
+                        {acctData[1]?.latestTransactionDate}
+                      </Tag>
+                      {Object.entries(acctData[1]?.totalValue).map((valData) => renderValueTag(valData))}
+                    </TreeItemLayout>
+                  </TreeItem>
+                ))}
+              </Tree>
+            </TreeItem>
+          );
+        })}
+      </Tree>
+    </div>
   );
 };
