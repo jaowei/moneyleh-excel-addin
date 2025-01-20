@@ -46,10 +46,14 @@ const roundDecimals = (num: number) => {
 };
 
 const formatValue = (num: number, currency: string) => {
-  return new Intl.NumberFormat(navigator.language, {
-    style: "currency",
-    currency,
-  }).format(roundDecimals(num));
+  try {
+    return new Intl.NumberFormat(navigator.language, {
+      style: "currency",
+      currency,
+    }).format(roundDecimals(num));
+  } catch (error) {
+    return `${currency} ${roundDecimals(num)}`;
+  }
 };
 
 const renderValueTag = (valData: [string, number]) => (

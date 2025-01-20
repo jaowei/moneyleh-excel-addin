@@ -5,6 +5,7 @@ import { DataInput } from "./DataInput";
 import { AccountOverview } from "./AccountOverview";
 import { getColumnValues, registerExcelHandlers } from "../../lib/excel";
 import { NaiveBayesClassifier } from "../../lib/classifier/naive-bayes";
+import { BookDatabaseFilled, PersonAccountsFilled } from "@fluentui/react-icons";
 
 interface AppProps {
   title: string;
@@ -25,13 +26,19 @@ const useStyles = makeStyles({
   },
 });
 
-const initClassifier = async (categoryData: string[][], details: string[][]) => {
+const initClassifier = async (categoryData: (string | number)[][], details: (string | number)[][]) => {
   const classifier = new NaiveBayesClassifier();
   for (let i = 0; i < categoryData.length; i++) {
-    const method = categoryData[i][0];
+    const category = categoryData[i][0];
     const detail = details[i][0];
-    if (!method || !detail) continue;
-    await classifier.learn(detail, method);
+    if (!category || !detail) continue;
+    try {
+      const checkedDetail = typeof detail !== "string" ? detail.toString() : detail;
+      const checkedCategory = typeof category !== "string" ? category.toString() : category;
+      await classifier.learn(checkedDetail, checkedCategory);
+    } catch (error) {
+      console.log(`Couldn't learn ${detail} for category ${category}`);
+    }
   }
   return classifier;
 };
@@ -104,10 +111,10 @@ const App: React.FC<AppProps> = () => {
   return (
     <div className={styles.root}>
       <TabList selectedValue={selectedPanel} onTabSelect={handleTabSelect} size="small" appearance="subtle">
-        <Tab id="data-input" value="data-input">
+        <Tab id="data-input" icon={<BookDatabaseFilled />} value="data-input">
           Data Input
         </Tab>
-        <Tab id="account-overview" value="account-overview">
+        <Tab id="account-overview" icon={<PersonAccountsFilled />} value="account-overview">
           Account Overview
         </Tab>
       </TabList>

@@ -49,10 +49,12 @@
 
 ## Further Enhancements
 
-1. Add accounts overview [DONE]
+1. Add accounts overview [Started]
 
    - ~~Shows latest transaction, remind if account not updated~~
    - ~~Shows total value of account~~
+   - Add proportion % for each account and company
+   - Month by month comparsion of accounts
 
 2. Auto tagging [PARTIALLY IMPLEMENTED]
 

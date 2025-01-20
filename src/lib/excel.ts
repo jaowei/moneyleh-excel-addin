@@ -11,7 +11,7 @@ export async function insertRange(rangeData: (string | number)[][] | undefined) 
   }
 }
 
-export async function getColumnValues(columnName: string): Promise<string[][]> {
+export async function getColumnValues(columnName: string): Promise<(string | number)[][]> {
   let data;
   try {
     await Excel.run(async (context) => {

@@ -162,7 +162,17 @@ export const DataInput = (props: DataInputProps) => {
     setAutoPopErrorState("none");
     setAutoPopErrorMsg("");
     const classifiers = props.classifier;
-    if (!classifiers || !props.selectedRange) return;
+    if (!classifiers) {
+      setAutoPopErrorState("error");
+      setAutoPopErrorMsg("Something has gone wrong! Please reach out for support!");
+      return;
+    }
+
+    if (!props.selectedRange) {
+      setAutoPopErrorState("error");
+      setAutoPopErrorMsg("Please select a cell first");
+      return;
+    }
 
     const errors = await preprocessRange(props.selectedRange, classifiers);
     if (errors.length) {
