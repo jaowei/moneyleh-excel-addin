@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@fluentui/react-components": "^9.46.8",
-    "@fluentui/react-icons": "^2.0.232",
+    "@fluentui/react-icons": "^2.0.274",
     "dayjs": "^1.11.13",
     "papaparse": "^5.4.1",
     "pdfjs-dist": "^4.8.69",
