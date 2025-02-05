@@ -49,14 +49,15 @@
 
 ## Further Enhancements
 
-1. Add accounts overview [Started]
+1. Add accounts overview
 
    - ~~Shows latest transaction, remind if account not updated~~
    - ~~Shows total value of account~~
    - Add proportion % for each account and company
    - Month by month comparsion of accounts
+   - Add sparklines after getting month by month data
 
-2. Auto tagging [PARTIALLY IMPLEMENTED]
+2. Auto tagging
 
    - ~~Automatically tag categories on transactions~~
    - ~~Test if possible to add client side Naive Bayes classifier~~
@@ -78,3 +79,7 @@
    - Search through tags, filter through them
    - Filter through time periods per tag
    - Lookup tags in combinations
+
+6. Data Input
+
+   - Enhance dropdown to narrow results for accounts when a company is chosen.

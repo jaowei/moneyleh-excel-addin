@@ -152,10 +152,14 @@ export const AccountOverview = (props: AccountOverviewProps) => {
     };
   }, [allDates]);
 
+  if (!companySummary || !Object.keys(companySummary).length) {
+    return <div>Unable to process accounts...</div>;
+  }
+
   if (
     (props?.companyNames &&
-      companySummary?.[props.companyNames[0]].totalValue &&
-      !Object.values(companySummary?.[props.companyNames[0]].totalValue)[0]) ||
+      companySummary?.[props.companyNames[0]]?.totalValue &&
+      !Object.values(companySummary?.[props.companyNames[0]]?.totalValue)[0]) ||
     !companySummary
   ) {
     return (
