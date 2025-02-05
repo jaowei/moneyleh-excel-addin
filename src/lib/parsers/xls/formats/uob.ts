@@ -5,7 +5,9 @@ import { Transaction, XLSFormatChecker, XLSFormatParser } from "../../parser.typ
 export const isUOBCardFormat: XLSFormatChecker = (parsedContent) => {
   const bankName = parsedContent[0][0];
   const statementType = parsedContent[5][1];
-  return bankName.includes("United Overseas Bank") && statementType.includes("CARD");
+  const statementPeriod = parsedContent[6][0];
+  const isCardStatement = statementPeriod === "Statement Date:" || statementType.includes("CARD");
+  return bankName.includes("United Overseas Bank") && isCardStatement;
 };
 
 export const isUOBAccountFormat: XLSFormatChecker = (parsedContent) => {
