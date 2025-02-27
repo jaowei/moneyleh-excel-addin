@@ -56,7 +56,7 @@
     "office-addin-test-helpers": "^1.5.5",
     "office-addin-test-server": "^1.5.5",
     "typescript": "^5.4.2",
-    "vite": "^5.4.11",
+    "vite": "^5.4.14",
     "vite-plugin-office-addin": "^2.1.0"
   },
   "prettier": "office-addin-prettier-config"
