@@ -45,7 +45,7 @@
     "@types/react-dom": "^18.2.21",
     "@vitejs/plugin-react-swc": "^3.7.1",
     "eslint-plugin-office-addins": "^3.0.2",
-    "eslint-plugin-react": "^7.28.0",
+    "eslint-plugin-react": "^7.37.4",
     "office-addin-cli": "^1.6.5",
     "office-addin-debugging": "^5.1.6",
     "office-addin-dev-certs": "^1.13.5",
