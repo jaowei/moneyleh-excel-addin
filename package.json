@@ -27,7 +27,7 @@
     "validate": "office-addin-manifest validate manifest.xml"
   },
   "dependencies": {
-    "@fluentui/react-components": "^9.46.8",
+    "@fluentui/react-components": "^9.60.0",
     "@fluentui/react-icons": "^2.0.232",
     "dayjs": "^1.11.13",
     "papaparse": "^5.4.1",
