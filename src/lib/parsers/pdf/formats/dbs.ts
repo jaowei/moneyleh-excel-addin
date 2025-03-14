@@ -2,6 +2,7 @@ import { descriptionToTags } from "../../description";
 import { isTextItem, PDFFormatChecker, PDFFormatParser, Transaction } from "../../parser.types";
 import { isInSameRow } from "../pdfParser";
 import { extendedDayjs, formatTransactionDate } from "../../../utils/dayjs";
+import dayjs from "dayjs";
 
 export const isDBSCardFormat: PDFFormatChecker = (data) => {
   const cardName = data?.at(35);
@@ -25,12 +26,12 @@ const isCardName = (text: string): string | undefined => {
   return;
 };
 
-const getYear = (text: string): string => {
-  const textLen = text.length;
-  if (extendedDayjs(text, "DD MMM YYYY").isValid()) {
-    return text.slice(textLen - 4);
+const getStatementDate = (text: string): dayjs.Dayjs | undefined => {
+  const convertedDate = extendedDayjs(text, "DD MMM YYYY");
+  if (convertedDate.isValid()) {
+    return convertedDate;
   }
-  return "";
+  return;
 };
 
 const extractAmount = (row: Array<string> | string) => {
@@ -45,22 +46,29 @@ const extractAmount = (row: Array<string> | string) => {
   return parsedAmount;
 };
 
-const extractDate = (row: Array<string> | string, year: string) => {
-  const rawString = year ? row.at(0) + year : row.at(0);
-  return formatTransactionDate(rawString, "DD MMMYYYY");
+const extractDate = (row: Array<string> | string, statementDate: dayjs.Dayjs | undefined) => {
+  const transactionDate = row.at(0);
+  const year = statementDate?.year();
+  // handle Jan statement transactions that are from previous year
+  if (statementDate?.month() === 0 && transactionDate?.toLowerCase().includes("dec")) {
+    const dateWithYear = year ? transactionDate + (year - 1).toString() : transactionDate;
+    return formatTransactionDate(dateWithYear, "DD MMMYYYY");
+  }
+  const dateWithYear = year ? transactionDate + year.toString() : transactionDate;
+  return formatTransactionDate(dateWithYear, "DD MMMYYYY");
 };
 
 const parseAppRow = (data: {
   row: string[];
-  year: string;
+  statementDate: dayjs.Dayjs | undefined;
   accountName: string;
   companyName: string;
 }): Transaction | undefined => {
-  const { row, year, accountName, companyName } = data;
+  const { row, statementDate, accountName, companyName } = data;
   const parsedAmount = extractAmount(row);
   if (!parsedAmount) return undefined;
 
-  const date = extractDate(row, year);
+  const date = extractDate(row, statementDate);
 
   const description = row.at(1) ?? "";
 
@@ -81,7 +89,7 @@ const parseAppRow = (data: {
 
 export const parseDBSFormat: PDFFormatParser = (textData, accountName, companyName) => {
   if (!textData) return [];
-  let statementYear: string = "";
+  let statementDate;
   let headerCoord = 0;
   let prevIdx: number = 0;
   let row: Array<string> = [];
@@ -97,7 +105,7 @@ export const parseDBSFormat: PDFFormatParser = (textData, accountName, companyNa
 
     if (filterTextData(text)) continue;
 
-    if (!statementYear) statementYear = getYear(text);
+    if (!statementDate) statementDate = getStatementDate(text);
 
     const cardName = isCardName(text);
     if (cardName) {
@@ -124,7 +132,7 @@ export const parseDBSFormat: PDFFormatParser = (textData, accountName, companyNa
       if (row.length >= 3) {
         const parsedData = parseAppRow({
           row,
-          year: statementYear,
+          statementDate,
           accountName: baseAccountName,
           companyName,
         });
