@@ -1,4 +1,4 @@
-import { extendedDayjs, formatTransactionDate } from "../../../utils/dayjs";
+import { formatTransactionDate } from "../../../utils/dayjs";
 import { CSVFormatChecker, CSVFormatParser, Transaction } from "../../parser.types";
 import { TransactionMethods } from "../../transactionMethods";
 import { TransactionTypes } from "../../transactionTypes";
@@ -8,13 +8,17 @@ export const isIBKRFormat: CSVFormatChecker = (data) => {
   return companyName.includes("BOF");
 };
 
+const isTableColumn = (row: string[]): boolean => {
+  return !(row[0].startsWith("U") && row[0].length === 8);
+};
+
 const reportSelector = (code: string) => {
   switch (code) {
     case "STFU":
       return {
         isReport: true,
         format(row: string[], _: string, companyName: string): Transaction | undefined {
-          if (!row[0].includes("U***")) return;
+          if (isTableColumn(row)) return;
           return {
             date: formatTransactionDate(row[29], "YYYYMMDD") ?? "",
             transactionTag: "",
@@ -32,7 +36,7 @@ const reportSelector = (code: string) => {
       return {
         isReport: true,
         format(row: string[], _: string, companyName: string): Transaction | undefined {
-          if (!row[0].includes("U***")) return;
+          if (isTableColumn(row)) return;
           return {
             date: formatTransactionDate(row[24], "YYYYMMDD") ?? "",
             transactionTag: "Investment GST",
@@ -50,7 +54,7 @@ const reportSelector = (code: string) => {
       return {
         isReport: true,
         format(row: string[], _: string, companyName: string): Transaction | undefined {
-          if (!row[0].includes("U***")) return;
+          if (isTableColumn(row)) return;
           const dateTime = row[24].split(";");
           return {
             date: formatTransactionDate(dateTime[0], "YYYYMMDD;") ?? "",
@@ -69,7 +73,7 @@ const reportSelector = (code: string) => {
       return {
         isReport: true,
         format(row: string[], _: string, companyName: string): Transaction | undefined {
-          if (!row[0].includes("U***")) return;
+          if (isTableColumn(row)) return;
           return {
             date: formatTransactionDate(row[4], "YYYYMMDD") ?? "",
             transactionTag: "",
