@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import officeAddin from "vite-plugin-office-addin";
 import devCerts from "office-addin-dev-certs";
+import tailwindcss from "@tailwindcss/vite";
 
 async function getHttpsOptions() {
   const httpsOptions = await devCerts.getHttpsServerOptions();
@@ -14,6 +15,7 @@ export default defineConfig(async ({ mode }) => ({
     officeAddin({
       devUrl: "https://localhost:3000",
     }),
+    tailwindcss(),
   ],
   root: "src",
   build: {

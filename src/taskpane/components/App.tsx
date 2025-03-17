@@ -1,30 +1,15 @@
 import * as React from "react";
-import { makeStyles, SelectTabEventHandler, Tab, TabList, TabValue } from "@fluentui/react-components";
 import { useState } from "react";
 import { DataInput } from "./DataInput";
 import { AccountOverview } from "./AccountOverview";
 import { getColumnValues, registerExcelHandlers } from "../../lib/excel";
 import { NaiveBayesClassifier } from "../../lib/classifier/naive-bayes";
-import { BookDatabaseFilled, PersonAccountsFilled } from "@fluentui/react-icons";
-
-interface AppProps {
-  title: string;
-}
 
 export interface Classifiers {
   methodClassifier: NaiveBayesClassifier;
   typesClassifier: NaiveBayesClassifier;
   tagsClassifier: NaiveBayesClassifier;
 }
-
-const useStyles = makeStyles({
-  root: {
-    height: "100%",
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-  },
-});
 
 const initClassifier = async (categoryData: (string | number)[][], details: (string | number)[][]) => {
   const classifier = new NaiveBayesClassifier();
@@ -43,13 +28,11 @@ const initClassifier = async (categoryData: (string | number)[][], details: (str
   return classifier;
 };
 
-const App: React.FC<AppProps> = () => {
-  const [selectedPanel, setSelectedPanel] = useState<TabValue>("data-input");
+const App: React.FC = () => {
   const [allCompanyNames, setAllCompanyNames] = useState<any[]>([]);
   const [allAccountNames, setAllAccountNames] = useState<any[]>([]);
   const [selectedRange, setSelectedRange] = useState<string>();
   const [classifiers, setClassifiers] = useState<Classifiers>();
-  const styles = useStyles();
 
   React.useEffect(() => {
     const initData = async () => {
@@ -104,32 +87,22 @@ const App: React.FC<AppProps> = () => {
     };
   }, [allAccountNames, allCompanyNames]);
 
-  const handleTabSelect: SelectTabEventHandler = (_, data) => {
-    setSelectedPanel(data.value);
-  };
-
   return (
-    <div className={styles.root}>
-      <TabList selectedValue={selectedPanel} onTabSelect={handleTabSelect} size="small" appearance="subtle">
-        <Tab id="data-input" icon={<BookDatabaseFilled />} value="data-input">
-          Data Input
-        </Tab>
-        <Tab id="account-overview" icon={<PersonAccountsFilled />} value="account-overview">
-          Account Overview
-        </Tab>
-      </TabList>
-      <div>
-        {selectedPanel === "data-input" && (
+    <div className="bg-base-200">
+      <div className="tabs tabs-lift">
+        <input type="radio" name="entry-tabs" className="tab" aria-label="Data Entry" defaultChecked />
+        <div className="tab-content bg-base-100 border-base-300 p-2">
           <DataInput
             accountNames={accountNames}
             companyNames={companyNames}
             selectedRange={selectedRange}
             classifier={classifiers}
           />
-        )}
-        {selectedPanel === "account-overview" && (
+        </div>
+        <input type="radio" name="entry-tabs" className="tab" aria-label="Accounts Overview" />
+        <div className="tab-content bg-base-100 border-base-300 p-6">
           <AccountOverview accountNames={allAccountNames} companyNames={allCompanyNames} combiMap={combiMap} />
-        )}
+        </div>
       </div>
     </div>
   );

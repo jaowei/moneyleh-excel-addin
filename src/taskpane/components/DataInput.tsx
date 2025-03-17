@@ -1,38 +1,11 @@
 import * as React from "react";
-import {
-  Button,
-  Combobox,
-  ComboboxProps,
-  Field,
-  Input,
-  Label,
-  makeStyles,
-  Tag,
-  useComboboxFilter,
-} from "@fluentui/react-components";
 import { routeToParsers } from "../../lib/parsers/parser";
 import { getRangeValue, insertRange, setRangeValue } from "../../lib/excel";
 import { useState } from "react";
 import { Transaction } from "../../lib/parsers/parser.types";
 import { NaiveBayesClassifier } from "../../lib/classifier/naive-bayes";
 import { Classifiers } from "./App";
-
-const useStyles = makeStyles({
-  root: {
-    height: "100%",
-    padding: "8px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px",
-  },
-  autoPop: {
-    width: "100%",
-    display: "flex",
-    flexDirection: "row",
-    gap: "8px",
-    alignItems: "center",
-  },
-});
+import { Combobox } from "./Combobox";
 
 interface DataInputProps {
   accountNames: any[];
@@ -97,25 +70,10 @@ const preprocessRange = async (range: string, classifers: Classifiers) => {
 export const DataInput = (props: DataInputProps) => {
   const [accountName, setAccountName] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [formatName, setFormatName] = useState<string | undefined>("");
+  const [formatName, setFormatName] = useState<string | undefined>();
   const [password, setPassword] = useState<string>("");
-  const [fileInputErrorState, setFileInputErrorState] = useState<"none" | "error" | "warning" | "success" | undefined>(
-    "none"
-  );
-  const [autoPopErrorState, setAutoPopErrorState] = useState<"none" | "error" | "warning" | "success" | undefined>(
-    "none"
-  );
   const [fileInputErrorMsg, setFileInputErrorMsg] = useState<string>("");
   const [autoPopErrorMsg, setAutoPopErrorMsg] = useState<string>("");
-  const styles = useStyles();
-
-  const handleCompanyNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCompanyName(e.currentTarget.value);
-  };
-
-  const handleAccountNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAccountName(e.currentTarget.value);
-  };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.currentTarget.value);
@@ -123,7 +81,6 @@ export const DataInput = (props: DataInputProps) => {
 
   const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      setFileInputErrorState("none");
       setFileInputErrorMsg("");
       const file = e.target.files?.[0];
       const result = await routeToParsers(file, accountName, companyName, password);
@@ -133,7 +90,6 @@ export const DataInput = (props: DataInputProps) => {
       setFormatName(result?.formatName);
       insertRange(tempData);
     } catch (error: any) {
-      setFileInputErrorState("error");
       if (error.name === "PasswordException") {
         setFileInputErrorMsg("File is password protected, please enter password!");
       } else {
@@ -144,85 +100,79 @@ export const DataInput = (props: DataInputProps) => {
     }
   };
 
-  const companyComboboxChildren = useComboboxFilter(companyName, props.companyNames, {
-    noOptionsMessage: "Couldn't find company!",
-  });
-  const accountComboboxChildren = useComboboxFilter(accountName, props.accountNames, {
-    noOptionsMessage: "Couldn't find account!",
-  });
-
-  const onCompanyOptionSelect: ComboboxProps["onOptionSelect"] = (_, data) => {
-    setCompanyName(data.optionText ?? "");
-  };
-  const onAccountOptionSelect: ComboboxProps["onOptionSelect"] = (_, data) => {
-    setAccountName(data.optionText ?? "");
-  };
-
   const handlePopulateClick = async () => {
-    setAutoPopErrorState("none");
     setAutoPopErrorMsg("");
     const classifiers = props.classifier;
     if (!classifiers) {
-      setAutoPopErrorState("error");
       setAutoPopErrorMsg("Something has gone wrong! Please reach out for support!");
       return;
     }
 
     if (!props.selectedRange) {
-      setAutoPopErrorState("error");
       setAutoPopErrorMsg("Please select a cell first");
       return;
     }
 
     const errors = await preprocessRange(props.selectedRange, classifiers);
     if (errors.length) {
-      setAutoPopErrorState("error");
       setAutoPopErrorMsg(errors.join(" ; "));
     }
   };
 
   return (
-    <div className={styles.root}>
-      <Field label="Company Name" hint="Company name to be filled">
+    <div>
+      <fieldset className="fieldset bg-base-200 border border-base-300 p-4 rounded-box">
+        <legend className="fieldset-legend">Select Company & Account Name</legend>
+        <label className="fieldset-label">Company name to populate:</label>
         <Combobox
-          placeholder="type to search companies, leave text to fill new company"
-          clearable
-          freeform
-          onOptionSelect={onCompanyOptionSelect}
-          onChange={handleCompanyNameChange}
-        >
-          {companyComboboxChildren}
-        </Combobox>
-      </Field>
-      <Field label="Account Name" hint="Account name to be filled">
+          options={props.companyNames}
+          onOptionChange={(option) => {
+            setCompanyName(option ?? "");
+          }}
+          placeholder="search companies"
+        />
+        <label className="fieldset-label">Account name to populate:</label>
         <Combobox
-          placeholder="type to search accounts, leave text to fill new account"
-          clearable
-          freeform
-          onOptionSelect={onAccountOptionSelect}
-          onChange={handleAccountNameChange}
-        >
-          {accountComboboxChildren}
-        </Combobox>
-      </Field>
-      <Field label="Password" hint="If the file has any password">
-        <Input type="password" value={password} onChange={handlePasswordChange}></Input>
-      </Field>
-      <Field label="Select file" required validationState={fileInputErrorState} validationMessage={fileInputErrorMsg}>
-        <input type="file" onChange={handleFileInputChange}></input>
-      </Field>
-      <Field label="Detected statement format">
-        <Label size="large" weight="semibold">
-          <Tag appearance="brand">{formatName ?? "No statement chosen"}</Tag>
-        </Label>
-      </Field>
-      <Field label="Auto Populate Cell" validationState={autoPopErrorState} validationMessage={autoPopErrorMsg}>
-        <div className={styles.autoPop}>
-          Selected:
-          <Tag appearance="brand">{props.selectedRange}</Tag>
-          <Button onClick={handlePopulateClick}>Populate</Button>
-        </div>
-      </Field>
+          options={props.accountNames}
+          onOptionChange={(option) => {
+            setAccountName(option ?? "");
+          }}
+          placeholder="search accounts"
+        />
+        <p className="fieldset-label">If adding a new company or account, simply type a new account or company name</p>
+      </fieldset>
+
+      <fieldset className="fieldset bg-base-200 border border-base-300 p-4 rounded-box">
+        <legend className="fieldset-legend">Select file</legend>
+        <input
+          type="file"
+          className="file-input file-input-primary file-input-sm"
+          onChange={handleFileInputChange}
+        ></input>
+        <p className="fieldset-label">{fileInputErrorMsg}</p>
+        <label className="fieldset-label">File Password:</label>
+        <label className="input validator input-sm">
+          <svg className="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2.5" fill="none" stroke="currentColor">
+              <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path>
+              <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
+            </g>
+          </svg>
+          <input type="password" value={password} onChange={handlePasswordChange} placeholder="if any" />
+        </label>
+        <label className="fieldset-label">Format detected:</label>
+        <div className="badge badge-accent">{formatName ?? "No statement chosen"}</div>
+      </fieldset>
+
+      <fieldset className="fieldset bg-base-200 border border-base-300 p-4 rounded-box">
+        <legend className="fieldset-legend">Auto Populate Cells</legend>
+        <label>Selected cells:</label>
+        <div className="badge badge-neutral">{props.selectedRange}</div>
+        <button className="btn btn-soft btn-sm" onClick={handlePopulateClick}>
+          Populate
+        </button>
+        <p className="fieldset-label">{autoPopErrorMsg}</p>
+      </fieldset>
     </div>
   );
 };
