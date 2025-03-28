@@ -1,4 +1,3 @@
-import { makeStyles, Spinner, Tag, Tree, TreeItem, TreeItemLayout } from "@fluentui/react-components";
 import { useEffect, useMemo, useState } from "react";
 import { getColumnValues } from "../../lib/excel";
 import { extendedDayjs } from "../../lib/utils/dayjs";
@@ -22,21 +21,6 @@ interface CompanySummary {
   accounts: Record<string, AccountSummary>;
 }
 
-const useStyles = makeStyles({
-  root: {
-    height: "100%",
-    width: "100%",
-    display: "flex",
-    gap: "10px",
-    flexDirection: "column",
-  },
-  netWorth: {
-    display: "flex",
-    gap: "10px",
-    paddingLeft: "10px",
-  },
-});
-
 const convertExcelDateToJS = (excelDate: number) => {
   return new Date(Math.round(excelDate - 25569) * 86400 * 1000);
 };
@@ -57,16 +41,15 @@ const formatValue = (num: number, currency: string) => {
 };
 
 const renderValueTag = (valData: [string, number]) => (
-  <Tag key={valData[0]} size="extra-small" appearance="brand" shape="circular">
+  <div key={valData[0]} className="badge badge-outline badge-primary">
     {formatValue(valData[1], valData[0])}
-  </Tag>
+  </div>
 );
 
 export const AccountOverview = (props: AccountOverviewProps) => {
   const [allDates, setAllDates] = useState<any[]>([]);
   const [allAmounts, setAllAmounts] = useState<any[]>([]);
   const [allCurrencies, setAllCurencies] = useState<any[]>([]);
-  const styles = useStyles();
 
   useEffect(() => {
     const getLatestDate = async () => {
@@ -163,49 +146,46 @@ export const AccountOverview = (props: AccountOverviewProps) => {
     !companySummary
   ) {
     return (
-      <div className={styles.root}>
-        <Spinner size="huge" label="Loading summary..." />
+      <div>
+        <span className="loading loading-bars loading-xl"></span>
       </div>
     );
   }
 
   return (
-    <div className={styles.root}>
-      <div className={styles.netWorth}>
-        <Tag appearance="outline">Total Net Worth:</Tag>
+    <div>
+      <div className="stats shadow">
         {Object.entries(totalNetWorth).map((nwData) => (
-          <Tag appearance="brand">{formatValue(nwData[1], nwData[0])}</Tag>
+          <div key={nwData[0]} className="stat">
+            <div className="stat-title ">Total Net Worth:</div>
+            <div className="stat-value text-primary">{formatValue(nwData[1], nwData[0])}</div>
+          </div>
         ))}
       </div>
-      <Tree size="small" aria-label="accounts">
+      <div>
         {Object.entries(companySummary).map((coyAndAccts) => {
           return (
-            <TreeItem key={coyAndAccts[0]} itemType="branch">
-              <TreeItemLayout>
-                <Tag size="extra-small" appearance="outline">
-                  {coyAndAccts[0]}
-                </Tag>
+            <div key={coyAndAccts[0]} className="collapse collapse-arrow">
+              <input type="checkbox"></input>
+              <div className="collapse-title flex gap-2 items-center">
+                {coyAndAccts[0]}
                 {Object.entries(coyAndAccts[1].totalValue).map((valData) => renderValueTag(valData))}
-              </TreeItemLayout>
-              <Tree>
-                {Object.entries(coyAndAccts[1].accounts).map((acctData) => (
-                  <TreeItem key={acctData[0]} itemType="leaf">
-                    <TreeItemLayout>
-                      <Tag size="extra-small" appearance="outline">
-                        {acctData[0]}
-                      </Tag>
-                      <Tag size="extra-small" appearance="filled">
-                        {acctData[1]?.latestTransactionDate}
-                      </Tag>
+              </div>
+              <div className="collapse-content">
+                <ul className="list">
+                  {Object.entries(coyAndAccts[1].accounts).map((acctData) => (
+                    <li key={acctData[0]} className="list-row">
+                      <div className="badge badge-soft badge-neutral">{acctData[0]}</div>
+                      <div className="badge badge-soft badge-neutral">{acctData[1]?.latestTransactionDate}</div>
                       {Object.entries(acctData[1]?.totalValue).map((valData) => renderValueTag(valData))}
-                    </TreeItemLayout>
-                  </TreeItem>
-                ))}
-              </Tree>
-            </TreeItem>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           );
         })}
-      </Tree>
+      </div>
     </div>
   );
 };
