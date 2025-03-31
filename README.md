@@ -53,7 +53,7 @@
 
    - ~~Shows latest transaction, remind if account not updated~~
    - ~~Shows total value of account~~
-   - Add proportion % for each account and company
+   - ~~Add proportion % for each account and company~~
    - Month by month comparsion of accounts
    - Add sparklines after getting month by month data
 

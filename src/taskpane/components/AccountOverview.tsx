@@ -19,6 +19,7 @@ interface AccountSummary {
 interface CompanySummary {
   totalValue: TotalValueSummary;
   accounts: Record<string, AccountSummary>;
+  fractionOfNetWorth: number;
 }
 
 const convertExcelDateToJS = (excelDate: number) => {
@@ -41,7 +42,7 @@ const formatValue = (num: number, currency: string) => {
 };
 
 const renderValueTag = (valData: [string, number]) => (
-  <div key={valData[0]} className="badge badge-outline badge-primary">
+  <div key={valData[0]} className="badge badge-primary">
     {formatValue(valData[1], valData[0])}
   </div>
 );
@@ -64,80 +65,74 @@ export const AccountOverview = (props: AccountOverviewProps) => {
     getLatestDate();
   }, []);
 
-  const { companySummary, totalNetWorth } = useMemo(() => {
-    const accountNames = props?.accountNames;
-    const companyNames = props?.companyNames;
-    const combiMap = props?.combiMap;
-    const mainCurrency: string = "SGD";
-    if (!accountNames || !combiMap || !companyNames || !allDates)
-      return {
-        companySummary: undefined,
-      };
-    const companySummaryMap: Record<string, CompanySummary> = {};
-    const totalNetWorth: Record<string, number> = {};
+  let companySummary;
 
-    Object.entries(combiMap).forEach((data) => {
-      const accounts: Record<string, any> = {};
-      Array.from(data[1]).forEach((accts) => {
-        accounts[accts] = {
-          totalValue: {},
-        };
-      });
-      companySummaryMap[data[0]] = {
-        accounts,
+  const accountNames = props?.accountNames;
+  const companyNames = props?.companyNames;
+  const combiMap = props?.combiMap;
+  const mainCurrency: string = "SGD";
+  if (!accountNames || !combiMap || !companyNames || !allDates) return <div>Unable to process accounts...</div>;
+
+  const companySummaryMap: Record<string, CompanySummary> = {};
+  const totalNetWorth: Record<string, number> = {};
+
+  Object.entries(combiMap).forEach((data) => {
+    const accounts: Record<string, any> = {};
+    Array.from(data[1]).forEach((accts) => {
+      accounts[accts] = {
         totalValue: {},
       };
     });
-    for (let i = 0; i < accountNames.length; i++) {
-      const companyName = companyNames[i];
-      const accountName = accountNames[i];
-      const currency = allCurrencies[i];
-      const currDate = extendedDayjs(convertExcelDateToJS(allDates[i]));
-      const currValue = parseFloat(allAmounts[i]);
-      const existingDate = extendedDayjs(
-        companySummaryMap[companyName].accounts[accountName].latestTransactionDate,
-        "DD/MM/YYYY"
-      );
+    companySummaryMap[data[0]] = {
+      accounts,
+      fractionOfNetWorth: 0,
+      totalValue: {},
+    };
+  });
+  for (let i = 0; i < accountNames.length; i++) {
+    const companyName = companyNames[i];
+    const accountName = accountNames[i];
+    const currency = allCurrencies[i];
+    const currDate = extendedDayjs(convertExcelDateToJS(allDates[i]));
+    const currValue = parseFloat(allAmounts[i]);
+    const existingDate = extendedDayjs(
+      companySummaryMap[companyName].accounts[accountName].latestTransactionDate,
+      "DD/MM/YYYY"
+    );
 
-      if (companySummaryMap[companyName].totalValue[currency] === undefined) {
-        companySummaryMap[companyName].totalValue[currency] = currValue;
-      } else {
-        companySummaryMap[companyName].totalValue[currency] += currValue;
-      }
-
-      if (companySummaryMap[companyName].accounts[accountName].totalValue[currency] === undefined) {
-        companySummaryMap[companyName].accounts[accountName].totalValue[currency] = currValue;
-      } else {
-        companySummaryMap[companyName].accounts[accountName].totalValue[currency] += currValue;
-      }
-
-      if (!existingDate.isValid() || (existingDate && currDate.isAfter(existingDate))) {
-        companySummaryMap[companyName].accounts[accountName].latestTransactionDate = currDate.format("DD/MM/YYYY");
-      }
-
-      if (totalNetWorth[currency] === undefined) {
-        totalNetWorth[currency] = currValue;
-      } else {
-        totalNetWorth[currency] += currValue;
-      }
+    if (companySummaryMap[companyName].totalValue[currency] === undefined) {
+      companySummaryMap[companyName].totalValue[currency] = currValue;
+    } else {
+      companySummaryMap[companyName].totalValue[currency] += currValue;
     }
 
-    const sorted: Record<string, CompanySummary> = {};
-    Object.entries(companySummaryMap)
-      .sort((a, b) => b[1].totalValue[mainCurrency] - a[1].totalValue[mainCurrency])
-      .forEach((val) => {
-        sorted[val[0]] = val[1];
-      });
+    if (companySummaryMap[companyName].accounts[accountName].totalValue[currency] === undefined) {
+      companySummaryMap[companyName].accounts[accountName].totalValue[currency] = currValue;
+    } else {
+      companySummaryMap[companyName].accounts[accountName].totalValue[currency] += currValue;
+    }
 
-    return {
-      companySummary: sorted,
-      totalNetWorth,
-    };
-  }, [allDates]);
+    if (!existingDate.isValid() || (existingDate && currDate.isAfter(existingDate))) {
+      companySummaryMap[companyName].accounts[accountName].latestTransactionDate = currDate.format("DD/MM/YYYY");
+    }
 
-  if (!companySummary || !Object.keys(companySummary).length) {
-    return <div>Unable to process accounts...</div>;
+    if (totalNetWorth[currency] === undefined) {
+      totalNetWorth[currency] = currValue;
+    } else {
+      totalNetWorth[currency] += currValue;
+    }
   }
+
+  const sorted: Record<string, CompanySummary> = {};
+  Object.entries(companySummaryMap)
+    .sort((a, b) => b[1].totalValue[mainCurrency] - a[1].totalValue[mainCurrency])
+    .forEach((val) => {
+      const data = val[1];
+      data.fractionOfNetWorth = roundDecimals(data.totalValue["SGD"] / totalNetWorth["SGD"]) * 100;
+      sorted[val[0]] = data;
+    });
+
+  companySummary = sorted;
 
   if (
     (props?.companyNames &&
@@ -153,11 +148,11 @@ export const AccountOverview = (props: AccountOverviewProps) => {
   }
 
   return (
-    <div>
+    <div className="flex gap-4 flex-col">
       <div className="stats shadow">
         {Object.entries(totalNetWorth).map((nwData) => (
           <div key={nwData[0]} className="stat">
-            <div className="stat-title ">Total Net Worth:</div>
+            <div className="stat-title">Total Net Worth:</div>
             <div className="stat-value text-primary">{formatValue(nwData[1], nwData[0])}</div>
           </div>
         ))}
@@ -165,18 +160,19 @@ export const AccountOverview = (props: AccountOverviewProps) => {
       <div>
         {Object.entries(companySummary).map((coyAndAccts) => {
           return (
-            <div key={coyAndAccts[0]} className="collapse collapse-arrow">
+            <div key={coyAndAccts[0]} className="collapse collapse-arrow bg-base-300">
               <input type="checkbox"></input>
               <div className="collapse-title flex gap-2 items-center">
-                {coyAndAccts[0]}
+                <div className="badge badge-primary">{coyAndAccts[0]}</div>
                 {Object.entries(coyAndAccts[1].totalValue).map((valData) => renderValueTag(valData))}
+                <div className="badge badge-accent">{coyAndAccts[1].fractionOfNetWorth}%</div>
               </div>
-              <div className="collapse-content">
+              <div className="collapse-content bg-base-100">
                 <ul className="list">
                   {Object.entries(coyAndAccts[1].accounts).map((acctData) => (
                     <li key={acctData[0]} className="list-row">
-                      <div className="badge badge-soft badge-neutral">{acctData[0]}</div>
-                      <div className="badge badge-soft badge-neutral">{acctData[1]?.latestTransactionDate}</div>
+                      <div className="badge badge-secondary badge-soft">{acctData[0]}</div>
+                      <div className="badge badge-secondary badge-soft">{acctData[1]?.latestTransactionDate}</div>
                       {Object.entries(acctData[1]?.totalValue).map((valData) => renderValueTag(valData))}
                     </li>
                   ))}
