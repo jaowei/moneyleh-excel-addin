@@ -12,6 +12,7 @@ interface DataInputProps {
   companyNames: any[];
   selectedRange: string | undefined;
   classifier: Classifiers | undefined;
+  combiMap: Record<string, Set<string>>;
 }
 
 const classifyRange = async (classifier: NaiveBayesClassifier, cellAddress: string, colLetter: string) => {
@@ -119,6 +120,8 @@ export const DataInput = (props: DataInputProps) => {
     }
   };
 
+  const accountNames = companyName ? [...props.combiMap[companyName]] : props.accountNames;
+
   return (
     <div>
       <fieldset className="fieldset bg-base-200 border border-base-300 p-4 rounded-box">
@@ -133,7 +136,7 @@ export const DataInput = (props: DataInputProps) => {
         />
         <label className="fieldset-label">Account name to populate:</label>
         <Combobox
-          options={props.accountNames}
+          options={accountNames}
           onOptionChange={(option) => {
             setAccountName(option ?? "");
           }}

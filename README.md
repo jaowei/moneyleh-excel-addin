@@ -86,5 +86,5 @@
 
 7. UI Enhancements
 
-   - Swap to daisy UI
+   - ~~Swap to daisy UI~~
    - Add manual refresh button

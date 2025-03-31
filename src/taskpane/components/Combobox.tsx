@@ -8,7 +8,6 @@ interface ComboboxProps {
 
 export const Combobox: React.FC<ComboboxProps> = ({ options, onOptionChange, placeholder }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
@@ -19,7 +18,6 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, onOptionChange, pla
   };
 
   const handleOptionClick = (option: string) => {
-    setSelectedOption(option);
     onOptionChange(option);
     setInputValue(option);
     setIsOpen(false);
@@ -38,7 +36,6 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, onOptionChange, pla
   };
 
   const handleClearClick = () => {
-    setSelectedOption(null);
     onOptionChange(null);
     setInputValue("");
     setIsOpen(false);

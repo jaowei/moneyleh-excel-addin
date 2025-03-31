@@ -109,6 +109,7 @@ const App: React.FC = () => {
             companyNames={companyNames}
             selectedRange={selectedRange}
             classifier={classifiers}
+            combiMap={combiMap}
           />
         </div>
         <label className="tab">
