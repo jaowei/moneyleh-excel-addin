@@ -82,7 +82,7 @@
 
 6. Data Input
 
-   - Enhance dropdown to narrow results for accounts when a company is chosen.
+   - ~~Enhance dropdown to narrow results for accounts when a company is chosen.~~
 
 7. UI Enhancements
 

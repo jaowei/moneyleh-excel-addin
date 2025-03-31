@@ -20,6 +20,13 @@ interface CompanySummary {
   totalValue: TotalValueSummary;
   accounts: Record<string, AccountSummary>;
   fractionOfNetWorth: number;
+  tmp: Array<{
+    curr: string;
+    year: number;
+    month: string;
+    amt: number;
+  }>;
+  monthMap?: Record<string, number>;
 }
 
 const convertExcelDateToJS = (excelDate: number) => {
@@ -87,13 +94,16 @@ export const AccountOverview = (props: AccountOverviewProps) => {
       accounts,
       fractionOfNetWorth: 0,
       totalValue: {},
+      tmp: [],
     };
   });
   for (let i = 0; i < accountNames.length; i++) {
     const companyName = companyNames[i];
     const accountName = accountNames[i];
-    const currency = allCurrencies[i];
+    const currency = allCurrencies[i][0];
     const currDate = extendedDayjs(convertExcelDateToJS(allDates[i]));
+    const currMonth = currDate.month().toString();
+    const currYear = currDate.year();
     const currValue = parseFloat(allAmounts[i]);
     const existingDate = extendedDayjs(
       companySummaryMap[companyName].accounts[accountName].latestTransactionDate,
@@ -105,6 +115,13 @@ export const AccountOverview = (props: AccountOverviewProps) => {
     } else {
       companySummaryMap[companyName].totalValue[currency] += currValue;
     }
+
+    companySummaryMap[companyName].tmp.push({
+      curr: currency,
+      month: currMonth,
+      year: currYear,
+      amt: currValue,
+    });
 
     if (companySummaryMap[companyName].accounts[accountName].totalValue[currency] === undefined) {
       companySummaryMap[companyName].accounts[accountName].totalValue[currency] = currValue;
@@ -129,7 +146,23 @@ export const AccountOverview = (props: AccountOverviewProps) => {
     .forEach((val) => {
       const data = val[1];
       data.fractionOfNetWorth = roundDecimals(data.totalValue["SGD"] / totalNetWorth["SGD"]) * 100;
-      sorted[val[0]] = data;
+      const monthMap = data.tmp
+        .filter((txn) => txn.year === new Date().getFullYear() && txn.curr === "SGD")
+        .reduce(
+          (prev, curr) => {
+            if (prev[curr.month] === undefined) {
+              prev[curr.month] = curr.amt;
+            } else {
+              prev[curr.month] += curr.amt;
+            }
+            return prev;
+          },
+          {} as Record<string, number>
+        );
+      sorted[val[0]] = {
+        ...data,
+        monthMap,
+      };
     });
 
   companySummary = sorted;
@@ -159,6 +192,7 @@ export const AccountOverview = (props: AccountOverviewProps) => {
       </div>
       <div>
         {Object.entries(companySummary).map((coyAndAccts) => {
+          const latestMonthlyValue = coyAndAccts[1].monthMap && Object.entries(coyAndAccts[1].monthMap).at(-1);
           return (
             <div key={coyAndAccts[0]} className="collapse collapse-arrow bg-base-300">
               <input type="checkbox"></input>
@@ -166,6 +200,11 @@ export const AccountOverview = (props: AccountOverviewProps) => {
                 <div className="badge badge-primary">{coyAndAccts[0]}</div>
                 {Object.entries(coyAndAccts[1].totalValue).map((valData) => renderValueTag(valData))}
                 <div className="badge badge-accent">{coyAndAccts[1].fractionOfNetWorth}%</div>
+                {latestMonthlyValue && (
+                  <div className={`badge badge-accent ${latestMonthlyValue[1] > 0 ? "badge-success" : "badge-error"}`}>
+                    Month: {latestMonthlyValue[0]} = {roundDecimals(latestMonthlyValue[1])}
+                  </div>
+                )}
               </div>
               <div className="collapse-content bg-base-100">
                 <ul className="list">
