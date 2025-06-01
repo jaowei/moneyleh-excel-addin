@@ -33,7 +33,7 @@
     "pdfjs-dist": "^5.1.91",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "tailwindcss": "^4.0.14",
+    "tailwindcss": "^4.1.8",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
